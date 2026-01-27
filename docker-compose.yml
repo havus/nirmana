@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: nirmana_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nirmana_be
+    ports:
+      - "5551:5432"
+    volumes:
+      - nirmana_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  be:
+    build:
+      context: ./be
+      dockerfile: Dockerfile.dev
+    container_name: nirmana_be
+    environment:
+      RAILS_ENV: development
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      RAILS_MAX_THREADS: 5
+    ports:
+      - "4441:3000"
+    volumes:
+      - ./be:/app
+      - be_bundle:/usr/local/bundle
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        rm -f /app/tmp/pids/server.pid &&
+        bundle exec rails db:create db:migrate &&
+        bundle exec rails server -b 0.0.0.0
+      "
+    stdin_open: true
+    tty: true
+
+  fe:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile.dev
+    container_name: nirmana_fe
+    environment:
+      NODE_ENV: development
+      VITE_BACKEND_BASE_URL: http://localhost:4441
+      VITE_PORT: 3030
+    ports:
+      - "4442:3030"
+    volumes:
+      - ./fe:/app
+      - /app/node_modules  # Prevent host node_modules from overriding container's
+    command: yarn dev --host 0.0.0.0
+    stdin_open: true
+    tty: true
+
+volumes:
+  nirmana_pg_data:
+  be_bundle:

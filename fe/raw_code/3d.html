@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nirmana Paku 3D (Artistik)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+      background-color: #f0f0f0;
+    }
+
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      width: 280px;
+      z-index: 100;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .control-group {
+      margin-bottom: 15px;
+    }
+
+    .control-group h3 {
+      margin-bottom: 8px;
+      font-size: 16px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .control-label {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .control-input {
+      flex: 1;
+    }
+
+    input[type="color"],
+    input[type="number"],
+    input[type="range"],
+    select {
+      width: 100%;
+      padding: 3px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .pattern-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .pattern-item {
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      padding: 5px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .pattern-item:hover {
+      border-color: #4CAF50;
+    }
+
+    .pattern-item.active {
+      border-color: #4CAF50;
+      background-color: #e8f5e9;
+    }
+
+    .color-preview {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .color-item {
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      height: 30px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .color-item:hover {
+      border-color: #4CAF50;
+    }
+
+    .color-item.active {
+      border-color: #4CAF50;
+    }
+
+    #info {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 100;
+    }
+
+    #status {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 100;
+      transition: opacity 0.5s;
+      opacity: 0;
+      /* Hidden by default */
+    }
+
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #4CAF50;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="loading-screen">
+    <div>
+      <div class="spinner"></div>
+      <p style="text-align: center; margin-top: 10px;">Memuat...</p>
+    </div>
+  </div>
+
+  <div id="controls">
+    <div class="control-group">
+      <h3>Performa</h3>
+      <div class="control-row">
+        <div class="control-label">Jumlah Paku</div>
+        <div class="control-input">
+          <select id="nailCountSelect">
+            <option value="21">Rendah (21×21 = 441)</option>
+            <option value="31">Sedang (31×31 = 961)</option>
+            <option value="41" selected>Tinggi (41×41 = 1681)</option>
+          </select>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Total Paku:</div>
+        <div class="control-input" id="actualNailCount">961</div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Jarak Antar Paku</h3>
+      <div class="control-row">
+        <div class="control-label">Jarak (cm)</div>
+        <div class="control-input">
+          <input type="range" id="nailSpacing" value="1.0" min="0.2" max="3.0" step="0.1">
+          <span id="spacingValue">1.0</span>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Distribusi</div>
+        <div class="control-input">
+          <select id="spacingDistribution">
+            <option value="uniform" selected>Seragam</option>
+            <option value="center">Padat di Tengah</option>
+            <option value="edges">Padat di Tepi</option>
+            <option value="random">Acak (Teratur)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Margin Papan</h3>
+      <div class="control-row">
+        <div class="control-label">Margin Atas (cm)</div>
+        <div class="control-input">
+          <input type="range" id="topMargin" value="0" min="0" max="5" step="0.5">
+          <span id="topMarginValue">0</span>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Margin Tepi (cm)</div>
+        <div class="control-input">
+          <input type="range" id="edgeMargin" value="0.5" min="0" max="5" step="0.5">
+          <span id="edgeMarginValue">0.5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pola Nirmana</h3>
+      <div class="control-row">
+        <div class="control-label">Pilih Pola</div>
+        <div class="control-input">
+          <select id="patternSelect">
+            <option value="diamond">Diamond</option>
+            <option value="diamonds">Diamonds</option>
+            <option value="waves">Gelombang</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pattern-preview" id="patternPreview">
+        <!-- Pattern previews will be added here -->
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">Intensitas Pola</div>
+        <div class="control-input">
+          <input type="range" id="patternIntensity" value="1.0" min="0.1" max="1.0" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">Skala Pola</div>
+        <div class="control-input">
+          <input type="range" id="patternScale" value="4" min="1" max="10" step="1">
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Warna Artistik</h3>
+      <div class="control-row">
+        <div class="control-label">Skema Warna</div>
+        <div class="control-input">
+          <select id="colorSchemeSelect">
+            <option value="rainbow">Pelangi</option>
+            <option value="complementary">Komplementer</option>
+            <option value="monochromatic">Monokromatik</option>
+            <option value="analogous">Analogus</option>
+            <option value="triadic">Triadic</option>
+            <option value="custom">Kustom</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="color-preview" id="colorPreview">
+        <!-- Color previews will be added here -->
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">Warna Dasar</div>
+        <div class="control-input">
+          <input type="color" id="baseColor" value="#ff4500">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">Variasi Warna</div>
+        <div class="control-input">
+          <input type="range" id="colorVariation" value="0.7" min="0" max="1" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">Kecerahan</div>
+        <div class="control-input">
+          <input type="range" id="brightness" value="0.8" min="0.2" max="1.2" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">Metalik</div>
+        <div class="control-input">
+          <input type="range" id="metalness" value="0.8" min="0" max="1" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pengaturan Papan</h3>
+      <div class="control-row">
+        <div class="control-label">Warna Papan</div>
+        <div class="control-input">
+          <input type="color" id="boardColor" value="#a4846a">
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Ukuran Papan:</div>
+        <div class="control-input" id="boardSizeDisplay">42 cm</div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pengaturan Paku</h3>
+      <div class="control-row">
+        <div class="control-label">Tinggi Min (cm)</div>
+        <div class="control-input">
+          <input type="range" id="minHeight" value="1" min="0.5" max="3" step="0.1">
+          <span id="minHeightValue">1.0</span>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Tinggi Max (cm)</div>
+        <div class="control-input">
+          <input type="range" id="maxHeight" value="5" min="1" max="10" step="0.1">
+          <span id="maxHeightValue">5.0</span>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Ukuran Kepala</div>
+        <div class="control-input">
+          <input type="range" id="headSizeRatio" value="2.0" min="1.2" max="3.0" step="0.1">
+          <span id="headSizeValue">2.0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pencahayaan</h3>
+      <div class="control-row">
+        <div class="control-label">Intensitas</div>
+        <div class="control-input">
+          <input type="range" id="lightIntensity" value="1.0" min="0.5" max="2.0" step="0.1">
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Kontras</div>
+        <div class="control-input">
+          <input type="range" id="lightContrast" value="0.6" min="0.2" max="1.0" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Tampilan</h3>
+      <div class="control-row">
+        <div class="control-label">Rotasi Otomatis</div>
+        <div class="control-input">
+          <input type="checkbox" id="autoRotate" checked>
+        </div>
+      </div>
+      <div class="control-row">
+        <div class="control-label">Detail Paku</div>
+        <div class="control-input">
+          <select id="nailDetailSelect">
+            <option value="low">Rendah (Box)</option>
+            <option value="medium">Sedang (Silinder)</option>
+            <option value="high" selected>Tinggi (Paku Realistis)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button id="regenerate">Terapkan Perubahan</button>
+    <button id="screenshot">Ambil Screenshot</button>
+  </div>
+
+  <div id="status">Memuat...</div>
+  <div id="info">FPS: <span id="fpsCounter">0</span> | Memori: <span id="memoryUsage">0</span> MB</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    // Variabel utama
+    let scene, camera, renderer, controls;
+    let board;
+    let nailInstancedMesh, nailHeadInstancedMesh;
+    let lights = [];
+    let lastTime = 0;
+    let frameCount = 0;
+    let fps = 0;
+    let isGenerating = false;
+    let generationTimeout = null;
+
+    // Pengaturan default
+    const settings = {
+      boardColor: 0xa4846a,
+      boardSize: 42, // cm (akan diatur otomatis berdasarkan jarak paku)
+      boardHeight: 2, // cm
+      baseColor: 0xffffff, // Warna dasar untuk skema warna
+      colorScheme: 'custom', // rainbow, complementary, monochromatic, analogous, triadic, custom
+      colorVariation: 0.7, // Seberapa bervariasi warna (0-1)
+      brightness: 0.8, // Kecerahan warna (0.2-1.2)
+      metalness: 0.8, // Tingkat metalik material (0-1)
+      headSizeRatio: 2.0, // Rasio ukuran kepala paku dibanding batang
+      nailGrid: 41, // Default ke 31x31 = 961 paku (seimbang)
+      minNailHeight: 1, // cm
+      maxNailHeight: 5, // cm
+      nailRadius: 0.1, // cm
+      edgeMargin: 0.5, // cm (margin dari tepi papan)
+      topMargin: 0, // cm (margin khusus untuk bagian atas papan)
+      autoRotate: false,
+      pattern: 'fingerprint',
+      patternIntensity: 1.0,
+      patternScale: 4,
+      nailDetail: 'medium', // low, medium, high
+      lightIntensity: 2.0, // Intensitas cahaya
+      lightContrast: 2.0, // Kontras cahaya (rasio ambient vs directional)
+      nailSpacing: 1.0, // Jarak antar paku (cm)
+      spacingDistribution: 'uniform' // Distribusi jarak: uniform, center, edges, random
+    };
+
+    // Pola-pola nirmana
+    const patterns = {
+      // Pola diamond tunggal di tengah
+      diamond: (x, y, gridSize, scale, intensity) => {
+        const centerX = gridSize / 2;
+        const centerY = gridSize / 2;
+        const dx = (x - centerX) / centerX;
+        const dy = (y - centerY) / centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy) * 2;
+        return Math.max(0, (1 - dist) * intensity);
+      },
+
+      // Pola multiple diamonds
+      diamonds: (x, y, gridSize, scale, intensity) => {
+        const s = scale;
+        const nx = ((x % s) / s) - 0.5;
+        const ny = ((y % s) / s) - 0.5;
+        const dist = Math.sqrt(nx * nx + ny * ny) * 2;
+        return Math.max(0, (1 - dist) * intensity);
+      },
+
+      // Pola gelombang
+      waves: (x, y, gridSize, scale, intensity) => {
+        const s = scale;
+        const val = (Math.sin(x / s) + Math.sin(y / s)) * 0.5;
+        return (val * 0.5 + 0.5) * intensity;
+      },
+    };
+
+    // Fungsi utilitas warna
+    const colorUtils = {
+      // Konversi HSL ke RGB
+      hslToRgb: (h, s, l) => {
+        let r, g, b;
+
+        if (s === 0) {
+          r = g = b = l; // achromatic
+        } else {
+          const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+          };
+
+          const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+          const p = 2 * l - q;
+
+          r = hue2rgb(p, q, h + 1 / 3);
+          g = hue2rgb(p, q, h);
+          b = hue2rgb(p, q, h - 1 / 3);
+        }
+
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+      },
+
+      // Konversi RGB ke hex
+      rgbToHex: (r, g, b) => {
+        return (r << 16) | (g << 8) | b;
+      },
+
+      // Konversi hex ke RGB
+      hexToRgb: (hex) => {
+        const r = (hex >> 16) & 255;
+        const g = (hex >> 8) & 255;
+        const b = hex & 255;
+        return [r, g, b];
+      },
+
+      // Konversi RGB ke HSL
+      rgbToHsl: (r, g, b) => {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+          h = s = 0; // achromatic
+        } else {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+          switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+          }
+
+          h /= 6;
+        }
+
+        return [h, s, l];
+      },
+
+      // Dapatkan warna berdasarkan skema warna
+      getColorFromScheme: (baseColor, value, index, total) => {
+        const [r, g, b] = colorUtils.hexToRgb(baseColor);
+        const [h, s, l] = colorUtils.rgbToHsl(r, g, b);
+
+        let newH = h;
+        let newS = s;
+        let newL = l * settings.brightness;
+
+        switch (settings.colorScheme) {
+          case 'rainbow':
+            // Warna pelangi berdasarkan posisi
+            newH = index / total;
+            newS = 0.7 + (value * 0.3 * settings.colorVariation);
+            newL = 0.4 + (value * 0.3 * settings.brightness);
+            break;
+
+          case 'complementary':
+            // Warna komplementer (berlawanan di roda warna)
+            newH = (h + (value * 0.5 * settings.colorVariation)) % 1.0;
+            newS = s * (0.7 + (value * 0.3));
+            newL = l * (0.7 + (value * 0.3 * settings.brightness));
+            break;
+
+          case 'monochromatic':
+            // Warna monokromatik (variasi kecerahan dan saturasi)
+            newS = s * (0.5 + (value * 0.5 * settings.colorVariation));
+            newL = 0.3 + (value * 0.5 * settings.brightness);
+            break;
+
+          case 'analogous':
+            // Warna analogus (berdekatan di roda warna)
+            newH = (h + (value * 0.2 * settings.colorVariation)) % 1.0;
+            newS = s * (0.7 + (value * 0.3));
+            newL = l * (0.7 + (value * 0.3 * settings.brightness));
+            break;
+
+          case 'triadic':
+            // Warna triadic (tiga warna dengan jarak sama di roda warna)
+            newH = (h + (Math.floor(index % 3) / 3)) % 1.0;
+            newS = 0.7 + (value * 0.3 * settings.colorVariation);
+            newL = 0.4 + (value * 0.3 * settings.brightness);
+            break;
+
+          case 'custom':
+          default:
+            // Gunakan warna dasar dengan variasi
+            newS = s * (0.8 + (value * 0.2));
+            newL = l * (0.7 + (value * 0.3 * settings.brightness));
+            break;
+        }
+
+        // Batasi nilai
+        newS = Math.min(1, Math.max(0, newS));
+        newL = Math.min(1, Math.max(0.1, newL));
+
+        const [nr, ng, nb] = colorUtils.hslToRgb(newH, newS, newL);
+        return colorUtils.rgbToHex(nr, ng, nb);
+      },
+
+      // Dapatkan warna untuk preview
+      getPreviewColors: (baseColor) => {
+        const colors = [];
+        const [r, g, b] = colorUtils.hexToRgb(baseColor);
+        const [h, s, l] = colorUtils.rgbToHsl(r, g, b);
+
+        switch (settings.colorScheme) {
+          case 'rainbow':
+            for (let i = 0; i < 6; i++) {
+              const newH = i / 6;
+              const [nr, ng, nb] = colorUtils.hslToRgb(newH, 0.8, 0.5);
+              colors.push(colorUtils.rgbToHex(nr, ng, nb));
+            }
+            break;
+
+          case 'complementary':
+            // Warna dasar
+            colors.push(baseColor);
+            // Warna komplementer
+            const [nr1, ng1, nb1] = colorUtils.hslToRgb((h + 0.5) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr1, ng1, nb1));
+            // Variasi
+            const [nr2, ng2, nb2] = colorUtils.hslToRgb((h + 0.1) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr2, ng2, nb2));
+            const [nr3, ng3, nb3] = colorUtils.hslToRgb((h + 0.6) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr3, ng3, nb3));
+            const [nr4, ng4, nb4] = colorUtils.hslToRgb((h + 0.2) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr4, ng4, nb4));
+            const [nr5, ng5, nb5] = colorUtils.hslToRgb((h + 0.7) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr5, ng5, nb5));
+            break;
+
+          case 'monochromatic':
+            for (let i = 0; i < 6; i++) {
+              const newL = 0.2 + (i * 0.15);
+              const newS = 0.5 + (i * 0.08);
+              const [nr, ng, nb] = colorUtils.hslToRgb(h, Math.min(1, newS), Math.min(1, newL));
+              colors.push(colorUtils.rgbToHex(nr, ng, nb));
+            }
+            break;
+
+          case 'analogous':
+            for (let i = 0; i < 6; i++) {
+              const newH = (h + (i - 3) * 0.05) % 1.0;
+              const [nr, ng, nb] = colorUtils.hslToRgb(newH, s, l);
+              colors.push(colorUtils.rgbToHex(nr, ng, nb));
+            }
+            break;
+
+          case 'triadic':
+            // Warna dasar
+            colors.push(baseColor);
+            // Warna triadic
+            const [nr6, ng6, nb6] = colorUtils.hslToRgb((h + 1 / 3) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr6, ng6, nb6));
+            const [nr7, ng7, nb7] = colorUtils.hslToRgb((h + 2 / 3) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr7, ng7, nb7));
+            // Variasi
+            const [nr8, ng8, nb8] = colorUtils.hslToRgb((h + 0.1) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr8, ng8, nb8));
+            const [nr9, ng9, nb9] = colorUtils.hslToRgb((h + 0.4) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr9, ng9, nb9));
+            const [nr10, ng10, nb10] = colorUtils.hslToRgb((h + 0.7) % 1.0, s, l);
+            colors.push(colorUtils.rgbToHex(nr10, ng10, nb10));
+            break;
+
+          case 'custom':
+          default:
+            // Warna dasar dan variasi
+            colors.push(baseColor);
+            for (let i = 1; i < 6; i++) {
+              const newH = (h + (i * 0.1)) % 1.0;
+              const newS = Math.min(1, s * (1 + (i * 0.05)));
+              const newL = Math.min(0.9, Math.max(0.3, l * (1 + ((i - 3) * 0.1))));
+              const [nr, ng, nb] = colorUtils.hslToRgb(newH, newS, newL);
+              colors.push(colorUtils.rgbToHex(nr, ng, nb));
+            }
+            break;
+        }
+
+        return colors;
+      }
+    };
+
+    // Fungsi untuk menghitung posisi paku berdasarkan distribusi
+    function calculateNailPositions() {
+      const positions = [];
+      const gridSize = settings.nailGrid;
+      const minSpacing = settings.nailRadius * 2.5; // Jarak minimum antar paku
+
+      // Hitung jarak antar paku berdasarkan distribusi
+      switch (settings.spacingDistribution) {
+        case 'center':
+          // Paku lebih padat di tengah, renggang di tepi
+          for (let z = 0; z < gridSize; z++) {
+            for (let x = 0; x < gridSize; x++) {
+              // Normalisasi posisi (-1 hingga 1, dengan 0 di tengah)
+              const nx = (x / (gridSize - 1)) * 2 - 1;
+              const nz = (z / (gridSize - 1)) * 2 - 1;
+
+              // Hitung jarak dari tengah (0-1)
+              const distFromCenter = Math.sqrt(nx * nx + nz * nz) / Math.sqrt(2);
+
+              // Jarak lebih rapat di tengah, renggang di tepi
+              const spacingFactor = minSpacing + (settings.nailSpacing * distFromCenter);
+
+              // Hitung posisi dengan spacing yang bervariasi
+              const posX = nx * (settings.nailSpacing * (gridSize - 1) / 2) * (1 + (spacingFactor - 1) * distFromCenter);
+              const posZ = nz * (settings.nailSpacing * (gridSize - 1) / 2) * (1 + (spacingFactor - 1) * distFromCenter);
+
+              positions.push({ x: posX, z: posZ });
+            }
+          }
+          break;
+
+        case 'edges':
+          // Paku lebih padat di tepi, renggang di tengah
+          for (let z = 0; z < gridSize; z++) {
+            for (let x = 0; x < gridSize; x++) {
+              // Normalisasi posisi (-1 hingga 1, dengan 0 di tengah)
+              const nx = (x / (gridSize - 1)) * 2 - 1;
+              const nz = (z / (gridSize - 1)) * 2 - 1;
+
+              // Hitung jarak dari tengah (0-1)
+              const distFromCenter = Math.sqrt(nx * nx + nz * nz) / Math.sqrt(2);
+
+              // Jarak lebih rapat di tepi, renggang di tengah
+              const spacingFactor = minSpacing + (settings.nailSpacing * (1 - distFromCenter));
+
+              // Hitung posisi dengan spacing yang bervariasi
+              const posX = nx * (settings.nailSpacing * (gridSize - 1) / 2) * (1 + (spacingFactor - 1) * (1 - distFromCenter));
+              const posZ = nz * (settings.nailSpacing * (gridSize - 1) / 2) * (1 + (spacingFactor - 1) * (1 - distFromCenter));
+
+              positions.push({ x: posX, z: posZ });
+            }
+          }
+          break;
+
+        case 'random':
+          // Distribusi acak tapi teratur (jittered grid)
+          const baseSpacing = settings.nailSpacing;
+          const jitterAmount = baseSpacing * 0.2;
+
+          for (let z = 0; z < gridSize; z++) {
+            for (let x = 0; x < gridSize; x++) {
+              // Posisi dasar pada grid
+              let posX = (x * baseSpacing) - (baseSpacing * (gridSize - 1) / 2);
+              let posZ = (z * baseSpacing) - (baseSpacing * (gridSize - 1) / 2);
+
+              // Tambahkan jitter (variasi acak)
+              posX += (Math.random() * 2 - 1) * jitterAmount;
+              posZ += (Math.random() * 2 - 1) * jitterAmount;
+
+              positions.push({ x: posX, z: posZ });
+            }
+          }
+          break;
+
+        case 'uniform':
+        default:
+          // Distribusi seragam (grid biasa)
+          const spacing = settings.nailSpacing;
+
+          for (let z = 0; z < gridSize; z++) {
+            for (let x = 0; x < gridSize; x++) {
+              const posX = (x * spacing) - (spacing * (gridSize - 1) / 2);
+              const posZ = (z * spacing) - (spacing * (gridSize - 1) / 2);
+              positions.push({ x: posX, z: posZ });
+            }
+          }
+          break;
+      }
+
+      // Validasi posisi untuk menghindari tabrakan
+      const validPositions = [];
+      const minDistance = settings.nailRadius * 2.2; // Jarak minimum antar paku
+
+      for (let i = 0; i < positions.length; i++) {
+        let isValid = true;
+        const pos = positions[i];
+
+        // Periksa jarak dengan paku yang sudah valid
+        for (let j = 0; j < validPositions.length; j++) {
+          const otherPos = validPositions[j];
+          const dx = pos.x - otherPos.x;
+          const dz = pos.z - otherPos.z;
+          const distance = Math.sqrt(dx * dx + dz * dz);
+
+          if (distance < minDistance) {
+            isValid = false;
+            break;
+          }
+        }
+
+        if (isValid) {
+          validPositions.push(pos);
+        }
+      }
+
+      // Hitung ukuran papan berdasarkan posisi paku
+      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+
+      validPositions.forEach(pos => {
+        minX = Math.min(minX, pos.x);
+        maxX = Math.max(maxX, pos.x);
+        minZ = Math.min(minZ, pos.z);
+        maxZ = Math.max(maxZ, pos.z);
+      });
+
+      // Tambahkan margin tepi
+      const edgeMargin = settings.edgeMargin;
+      minX -= edgeMargin;
+      maxX += edgeMargin;
+      minZ -= edgeMargin;
+
+      // Tambahkan margin atas (khusus untuk Z positif)
+      maxZ += settings.topMargin > 0 ? settings.topMargin : edgeMargin;
+
+      // Hitung ukuran papan baru
+      const boardWidth = maxX - minX;
+      const boardDepth = maxZ - minZ;
+      settings.boardSize = Math.max(boardWidth, boardDepth);
+
+      // Perbarui tampilan ukuran papan
+      document.getElementById('boardSizeDisplay').textContent = settings.boardSize.toFixed(1) + ' cm';
+
+      // Sesuaikan posisi paku agar berada di tengah papan
+      const centerX = (minX + maxX) / 2;
+      const centerZ = (minZ + maxZ) / 2;
+
+      validPositions.forEach(pos => {
+        pos.x -= centerX;
+        pos.z -= centerZ;
+      });
+
+      // Update tampilan jumlah paku aktual
+      document.getElementById('actualNailCount').textContent = validPositions.length;
+
+      return validPositions;
+    }
+
+    // Inisialisasi
+    function init() {
+      try {
+        // Scene
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf5f5f5);
+
+        // Camera
+        camera = new THREE.PerspectiveCamera(
+          60,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        camera.position.set(0, 30, 50);
+
+        // Renderer dengan pengaturan optimal
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          preserveDrawingBuffer: true,
+          powerPreference: 'high-performance'
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Batasi pixel ratio untuk performa
+        renderer.physicallyCorrectLights = true;
+
+        // Tambahkan renderer ke container
+        const container = document.getElementById('canvas-container');
+        container.appendChild(renderer.domElement);
+
+        // Setup lighting
+        setupLighting();
+
+        // Controls
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = false;
+        controls.autoRotate = settings.autoRotate;
+        controls.autoRotateSpeed = 1.0;
+
+        // Create board
+        createBoard();
+
+        // Setup UI
+        setupUI();
+
+        // Create pattern previews
+        createPatternPreviews();
+
+        // Create color previews
+        createColorPreviews();
+
+        // Create nails
+        createNails();
+
+        // Event listeners
+        window.addEventListener('resize', onWindowResize);
+
+        // Start FPS counter and memory monitor
+        updatePerformanceStats();
+
+        // Animation loop
+        animate();
+
+        // Sembunyikan loading screen setelah semuanya siap
+        setTimeout(() => {
+          const loadingScreen = document.getElementById('loading-screen');
+          loadingScreen.style.opacity = '0';
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }, 500);
+
+      } catch (error) {
+        console.error("Error initializing 3D scene:", error);
+        alert("Terjadi kesalahan saat memuat scene 3D. Silakan refresh halaman.");
+      }
+    }
+
+    // Setup lighting
+    function setupLighting() {
+      // Clear existing lights
+      lights.forEach(light => {
+        scene.remove(light);
+      });
+      lights = [];
+
+      // Ambient light
+      const ambientIntensity = settings.lightIntensity * settings.lightContrast;
+      const ambientLight = new THREE.AmbientLight(0xffffff, ambientIntensity);
+      scene.add(ambientLight);
+      lights.push(ambientLight);
+
+      // Main directional light
+      const directionalIntensity = settings.lightIntensity * (1 - settings.lightContrast * 0.5);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, directionalIntensity);
+      directionalLight.position.set(1, 1, 1);
+      scene.add(directionalLight);
+      lights.push(directionalLight);
+
+      // Back light untuk highlight
+      const backLight = new THREE.DirectionalLight(0xffffff, directionalIntensity * 0.5);
+      backLight.position.set(-1, 0.5, -1);
+      scene.add(backLight);
+      lights.push(backLight);
+
+      // Side light untuk dimensi
+      const sideLight = new THREE.DirectionalLight(0xffffff, directionalIntensity * 0.3);
+      sideLight.position.set(1, 0.2, -0.5);
+      scene.add(sideLight);
+      lights.push(sideLight);
+    }
+
+    // Create board
+    function createBoard() {
+      // Remove old board if exists
+      if (board) {
+        scene.remove(board);
+        board.geometry.dispose();
+        board.material.dispose();
+      }
+
+      const geometry = new THREE.BoxGeometry(
+        settings.boardSize,
+        settings.boardHeight,
+        settings.boardSize
+      );
+
+      const material = new THREE.MeshStandardMaterial({
+        color: settings.boardColor,
+        roughness: 0.7,
+        metalness: 0.1
+      });
+
+      board = new THREE.Mesh(geometry, material);
+      board.position.y = -settings.boardHeight / 2;
+      scene.add(board);
+    }
+
+    // Create nail geometry based on detail level
+    function createNailGeometry() {
+      let geometry;
+
+      switch (settings.nailDetail) {
+        case 'low':
+          // Simple box (most efficient)
+          geometry = new THREE.BoxGeometry(
+            settings.nailRadius * 2,
+            1, // Will be scaled later
+            settings.nailRadius * 2
+          );
+          break;
+
+        case 'high':
+          // More detailed nail with head and tip
+          const segments = 8;
+
+          // Create shaft (cylinder)
+          const shaftGeometry = new THREE.CylinderGeometry(
+            settings.nailRadius,
+            settings.nailRadius,
+            1, // Will be scaled later
+            segments
+          );
+
+          // Create tip (cone)
+          const tipGeometry = new THREE.ConeGeometry(
+            settings.nailRadius,
+            settings.nailRadius * 2,
+            segments
+          );
+
+          // Position tip at bottom of nail
+          tipGeometry.translate(0, -0.5 - settings.nailRadius, 0);
+
+          // Use simplified approach for better compatibility
+          const combinedGeometry = new THREE.BufferGeometry();
+          const positions = [];
+          const normals = [];
+          const uvs = [];
+
+          // Helper to add vertices from a geometry
+          function addGeometry(geometry) {
+            const positionAttr = geometry.attributes.position;
+            const normalAttr = geometry.attributes.normal;
+            const uvAttr = geometry.attributes.uv;
+
+            for (let i = 0; i < positionAttr.count; i++) {
+              positions.push(
+                positionAttr.getX(i),
+                positionAttr.getY(i),
+                positionAttr.getZ(i)
+              );
+
+              normals.push(
+                normalAttr.getX(i),
+                normalAttr.getY(i),
+                normalAttr.getZ(i)
+              );
+
+              uvs.push(
+                uvAttr.getX(i),
+                uvAttr.getY(i)
+              );
+            }
+          }
+
+          // Add parts
+          addGeometry(shaftGeometry);
+          addGeometry(tipGeometry);
+
+          // Set attributes
+          combinedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+          combinedGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+          combinedGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
+          geometry = combinedGeometry;
+          break;
+
+        case 'medium':
+        default:
+          // Simple cylinder (good balance)
+          geometry = new THREE.CylinderGeometry(
+            settings.nailRadius,
+            settings.nailRadius,
+            1, // Will be scaled later
+            6 // Reduced segments
+          );
+          break;
+      }
+
+      return geometry;
+    }
+
+    // Create nail head geometry based on detail level
+    function createNailHeadGeometry() {
+      let geometry;
+      const headRadius = settings.nailRadius * settings.headSizeRatio;
+      const headHeight = settings.nailRadius * 0.5;
+
+      switch (settings.nailDetail) {
+        case 'low':
+          // Simple box head (most efficient)
+          geometry = new THREE.BoxGeometry(
+            headRadius * 2,
+            headHeight,
+            headRadius * 2
+          );
+          break;
+
+        case 'high':
+          // More detailed head (beveled cylinder)
+          const segments = 8;
+
+          // Create cylinder for head
+          geometry = new THREE.CylinderGeometry(
+            headRadius,
+            headRadius * 0.9, // Slight taper
+            headHeight,
+            segments
+          );
+          break;
+
+        case 'medium':
+        default:
+          // Simple cylinder head
+          geometry = new THREE.CylinderGeometry(
+            headRadius,
+            headRadius,
+            headHeight,
+            6 // Reduced segments
+          );
+          break;
+      }
+
+      return geometry;
+    }
+
+    // Create nails using instancing without loading screen
+    function createNails() {
+      // Prevent multiple simultaneous generations
+      if (isGenerating) {
+        clearTimeout(generationTimeout);
+        cancelAnimationFrame(generationTimeout);
+      }
+
+      isGenerating = true;
+      updateStatus('Menghasilkan paku nirmana...');
+
+      // Remove old nails if exist
+      if (nailInstancedMesh) {
+        scene.remove(nailInstancedMesh);
+        nailInstancedMesh.geometry.dispose();
+        nailInstancedMesh.material.dispose();
+        nailInstancedMesh = null;
+      }
+
+      if (nailHeadInstancedMesh) {
+        scene.remove(nailHeadInstancedMesh);
+        nailHeadInstancedMesh.geometry.dispose();
+        nailHeadInstancedMesh.material.dispose();
+        nailHeadInstancedMesh = null;
+      }
+
+      // Force garbage collection if available
+      if (window.gc) {
+        window.gc();
+      }
+
+      // Create nail geometry
+      const nailGeometry = createNailGeometry();
+      const nailHeadGeometry = createNailHeadGeometry();
+
+      // Create materials with solid appearance
+      const nailMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff, // Warna akan diatur per instance
+        roughness: 0.3,
+        metalness: settings.metalness,
+        flatShading: false
+      });
+
+      const nailHeadMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff, // Warna akan diatur per instance
+        roughness: 0.2,
+        metalness: settings.metalness + 0.1,
+        flatShading: false
+      });
+
+      // Hitung posisi paku berdasarkan distribusi
+      const nailPositions = calculateNailPositions();
+      const totalNails = nailPositions.length;
+
+      // Perbarui ukuran papan berdasarkan posisi paku
+      createBoard();
+
+      // Create instanced meshes
+      nailInstancedMesh = new THREE.InstancedMesh(
+        nailGeometry,
+        nailMaterial,
+        totalNails
+      );
+
+      nailHeadInstancedMesh = new THREE.InstancedMesh(
+        nailHeadGeometry,
+        nailHeadMaterial,
+        totalNails
+      );
+
+      // Add to scene immediately so user sees something
+      scene.add(nailInstancedMesh);
+      scene.add(nailHeadInstancedMesh);
+
+      // Position each nail instance in batches for better performance
+      const nailMatrix = new THREE.Matrix4();
+      const headMatrix = new THREE.Matrix4();
+      const batchSize = 100; // Process in batches
+
+      // Head offset (position head at top of nail)
+      const headHeight = settings.nailRadius * 0.5;
+
+      // Color array untuk instanced mesh
+      const nailColors = [];
+      const headColors = [];
+
+      // Pra-hitung semua warna dan nilai pola
+      const patternValues = [];
+      for (let i = 0; i < totalNails; i++) {
+        // Normalisasi posisi untuk pola
+        const pos = nailPositions[i];
+        const normalizedX = (pos.x + settings.boardSize / 2) / settings.boardSize * settings.nailGrid;
+        const normalizedZ = (pos.z + settings.boardSize / 2) / settings.boardSize * settings.nailGrid;
+
+        // Calculate pattern value
+        const patternValue = patterns[settings.pattern](
+          normalizedX, normalizedZ, settings.nailGrid, settings.patternScale, settings.patternIntensity
+        );
+        patternValues.push(patternValue);
+
+        // Calculate color based on pattern value and position
+        const nailColor = colorUtils.getColorFromScheme(
+          settings.baseColor,
+          patternValue,
+          i,
+          totalNails
+        );
+
+        // Slightly darker color for head
+        const [r, g, b] = colorUtils.hexToRgb(nailColor);
+        const [h, s, l] = colorUtils.rgbToHsl(r, g, b);
+        const [hr, hg, hb] = colorUtils.hslToRgb(h, s, l * 0.9);
+        const headColor = colorUtils.rgbToHex(hr, hg, hb);
+
+        nailColors.push(nailColor);
+        headColors.push(headColor);
+      }
+
+      let index = 0;
+      let processedNails = 0;
+
+      function processBatch() {
+        const startIndex = processedNails;
+        const endIndex = Math.min(processedNails + batchSize, totalNails);
+
+        for (let i = startIndex; i < endIndex; i++) {
+          const pos = nailPositions[i];
+
+          // Get pre-calculated pattern value
+          const patternValue = patternValues[i];
+
+          // Map pattern value to height range
+          const height = settings.minNailHeight +
+            patternValue * (settings.maxNailHeight - settings.minNailHeight);
+
+          // Set matrix for nail shaft
+          nailMatrix.makeScale(1, height, 1);
+          nailMatrix.setPosition(pos.x, height / 2, pos.z);
+
+          // Apply to nail instance
+          nailInstancedMesh.setMatrixAt(index, nailMatrix);
+          nailInstancedMesh.setColorAt(index, new THREE.Color(nailColors[i]));
+
+          // Set matrix for nail head
+          headMatrix.makeScale(1, 1, 1);
+          headMatrix.setPosition(pos.x, height + (headHeight / 2), pos.z);
+
+          // Apply to head instance
+          nailHeadInstancedMesh.setMatrixAt(index, headMatrix);
+          nailHeadInstancedMesh.setColorAt(index, new THREE.Color(headColors[i]));
+
+          index++;
+        }
+
+        // Update instance matrices for visible changes
+        nailInstancedMesh.instanceMatrix.needsUpdate = true;
+        nailInstancedMesh.instanceColor.needsUpdate = true;
+        nailHeadInstancedMesh.instanceMatrix.needsUpdate = true;
+        nailHeadInstancedMesh.instanceColor.needsUpdate = true;
+
+        processedNails = endIndex;
+
+        // Update status
+        const progress = Math.round((processedNails / totalNails) * 100);
+        updateStatus(`Menghasilkan paku... ${progress}%`);
+
+        // Continue processing or finish
+        if (processedNails < totalNails) {
+          // Use requestAnimationFrame instead of setTimeout for better performance
+          generationTimeout = requestAnimationFrame(processBatch);
+        } else {
+          // Finish
+          isGenerating = false;
+          updateStatus(`Selesai (${totalNails} paku)`, true);
+        }
+      }
+
+      // Start processing
+      processBatch();
+    }
+
+    // Update status message
+    function updateStatus(message, autoHide = false) {
+      const statusElement = document.getElementById('status');
+      statusElement.textContent = message;
+      statusElement.style.opacity = '1';
+
+      if (autoHide) {
+        setTimeout(() => {
+          statusElement.style.opacity = '0';
+        }, 2000);
+      }
+    }
+
+    // Create pattern previews
+    function createPatternPreviews() {
+      const previewContainer = document.getElementById('patternPreview');
+      previewContainer.innerHTML = '';
+
+      // Create preview for each pattern
+      Object.keys(patterns).forEach(patternName => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'pattern-item';
+        previewItem.dataset.pattern = patternName;
+        previewItem.textContent = patternName.charAt(0).toUpperCase() + patternName.slice(1);
+
+        // Set active class for current pattern
+        if (patternName === settings.pattern) {
+          previewItem.classList.add('active');
+        }
+
+        // Add click event
+        previewItem.addEventListener('click', () => {
+          // Update settings
+          settings.pattern = patternName;
+
+          // Update select element
+          document.getElementById('patternSelect').value = patternName;
+
+          // Update active class
+          document.querySelectorAll('.pattern-item').forEach(item => {
+            item.classList.remove('active');
+          });
+          previewItem.classList.add('active');
+
+          // Regenerate nails
+          createNails();
+        });
+
+        previewContainer.appendChild(previewItem);
+      });
+    }
+
+    // Create color previews
+    function createColorPreviews() {
+      const previewContainer = document.getElementById('colorPreview');
+      previewContainer.innerHTML = '';
+
+      // Get preview colors
+      const colors = colorUtils.getPreviewColors(settings.baseColor);
+
+      // Create preview for each color
+      colors.forEach(color => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'color-item';
+        previewItem.style.backgroundColor = '#' + color.toString(16).padStart(6, '0');
+        previewContainer.appendChild(previewItem);
+      });
+    }
+
+    // Update FPS counter and memory usage
+    function updatePerformanceStats() {
+      const now = performance.now();
+
+      if (lastTime) {
+        const delta = now - lastTime;
+        frameCount++;
+
+        if (delta >= 1000) {
+          fps = Math.round((frameCount * 1000) / delta);
+          document.getElementById('fpsCounter').textContent = fps;
+          frameCount = 0;
+          lastTime = now;
+
+          // Estimate memory usage (rough approximation)
+          let memoryUsage = 0;
+          if (window.performance && window.performance.memory) {
+            memoryUsage = Math.round(window.performance.memory.usedJSHeapSize / (1024 * 1024));
+          } else {
+            // Rough estimate based on nail count
+            const totalNails = settings.nailGrid * settings.nailGrid;
+            memoryUsage = Math.round((totalNails * 0.001 + 5) * 10) / 10;
+          }
+          document.getElementById('memoryUsage').textContent = memoryUsage;
+        }
+      } else {
+        lastTime = now;
+      }
+
+      requestAnimationFrame(updatePerformanceStats);
+    }
+
+    // Setup UI controls
+    function setupUI() {
+      // Nail count select
+      document.getElementById('nailCountSelect').value = settings.nailGrid;
+      document.getElementById('nailCountSelect').addEventListener('change', function () {
+        settings.nailGrid = parseInt(this.value);
+        // Update actual nail count display
+        const expectedCount = settings.nailGrid * settings.nailGrid;
+        document.getElementById('actualNailCount').textContent = expectedCount;
+        createNails();
+      });
+
+      // Nail detail select
+      document.getElementById('nailDetailSelect').value = settings.nailDetail;
+      document.getElementById('nailDetailSelect').addEventListener('change', function () {
+        settings.nailDetail = this.value;
+        createNails();
+      });
+
+      // Nail spacing controls
+      document.getElementById('nailSpacing').value = settings.nailSpacing;
+      document.getElementById('spacingValue').textContent = settings.nailSpacing.toFixed(1);
+      document.getElementById('nailSpacing').addEventListener('input', function () {
+        settings.nailSpacing = parseFloat(this.value);
+        document.getElementById('spacingValue').textContent = settings.nailSpacing.toFixed(1);
+      });
+
+      document.getElementById('nailSpacing').addEventListener('change', function () {
+        createNails();
+      });
+
+      // Spacing distribution
+      document.getElementById('spacingDistribution').value = settings.spacingDistribution;
+      document.getElementById('spacingDistribution').addEventListener('change', function () {
+        settings.spacingDistribution = this.value;
+        createNails();
+      });
+
+      // Margin controls
+      document.getElementById('topMargin').value = settings.topMargin;
+      document.getElementById('topMarginValue').textContent = settings.topMargin.toFixed(1);
+      document.getElementById('topMargin').addEventListener('input', function () {
+        settings.topMargin = parseFloat(this.value);
+        document.getElementById('topMarginValue').textContent = settings.topMargin.toFixed(1);
+      });
+
+      document.getElementById('topMargin').addEventListener('change', function () {
+        createNails();
+      });
+
+      document.getElementById('edgeMargin').value = settings.edgeMargin;
+      document.getElementById('edgeMarginValue').textContent = settings.edgeMargin.toFixed(1);
+      document.getElementById('edgeMargin').addEventListener('input', function () {
+        settings.edgeMargin = parseFloat(this.value);
+        document.getElementById('edgeMarginValue').textContent = settings.edgeMargin.toFixed(1);
+      });
+
+      document.getElementById('edgeMargin').addEventListener('change', function () {
+        createNails();
+      });
+
+      // Pattern select
+      document.getElementById('patternSelect').addEventListener('change', function () {
+        settings.pattern = this.value;
+
+        // Update active class in pattern preview
+        document.querySelectorAll('.pattern-item').forEach(item => {
+          item.classList.remove('active');
+          if (item.dataset.pattern === settings.pattern) {
+            item.classList.add('active');
+          }
+        });
+
+        createNails();
+      });
+
+      // Color scheme select
+      document.getElementById('colorSchemeSelect').addEventListener('change', function () {
+        settings.colorScheme = this.value;
+        createColorPreviews();
+        createNails();
+      });
+
+      // Base color
+      document.getElementById('baseColor').value = '#' + settings.baseColor.toString(16).padStart(6, '0');
+      document.getElementById('baseColor').addEventListener('input', function () {
+        settings.baseColor = parseInt(this.value.substring(1), 16);
+        createColorPreviews();
+        createNails();
+      });
+
+      // Color variation
+      document.getElementById('colorVariation').addEventListener('input', function () {
+        settings.colorVariation = parseFloat(this.value);
+        createColorPreviews();
+      });
+
+      document.getElementById('colorVariation').addEventListener('change', function () {
+        createNails();
+      });
+
+      // Brightness
+      document.getElementById('brightness').addEventListener('input', function () {
+        settings.brightness = parseFloat(this.value);
+        createColorPreviews();
+      });
+
+      document.getElementById('brightness').addEventListener('change', function () {
+        createNails();
+      });
+
+      // Metalness
+      document.getElementById('metalness').addEventListener('input', function () {
+        settings.metalness = parseFloat(this.value);
+        if (nailInstancedMesh) {
+          nailInstancedMesh.material.metalness = settings.metalness;
+        }
+        if (nailHeadInstancedMesh) {
+          nailHeadInstancedMesh.material.metalness = settings.metalness + 0.1;
+        }
+      });
+
+      // Light intensity
+      document.getElementById('lightIntensity').addEventListener('input', function () {
+        settings.lightIntensity = parseFloat(this.value);
+        setupLighting();
+      });
+
+      // Light contrast
+      document.getElementById('lightContrast').addEventListener('input', function () {
+        settings.lightContrast = parseFloat(this.value);
+        setupLighting();
+      });
+
+      // Pattern intensity - use debounce for better performance
+      let intensityTimeout;
+      document.getElementById('patternIntensity').addEventListener('input', function () {
+        settings.patternIntensity = parseFloat(this.value);
+
+        clearTimeout(intensityTimeout);
+        intensityTimeout = setTimeout(() => {
+          createNails();
+        }, 300);
+      });
+
+      // Pattern scale - use debounce for better performance
+      let scaleTimeout;
+      document.getElementById('patternScale').addEventListener('input', function () {
+        settings.patternScale = parseInt(this.value);
+
+        clearTimeout(scaleTimeout);
+        scaleTimeout = setTimeout(() => {
+          createNails();
+        }, 300);
+      });
+
+      // Board color
+      document.getElementById('boardColor').addEventListener('input', function () {
+        settings.boardColor = parseInt(this.value.substring(1), 16);
+        if (board) {
+          board.material.color.set(settings.boardColor);
+        }
+      });
+
+      // Head size ratio
+      document.getElementById('headSizeRatio').addEventListener('input', function () {
+        settings.headSizeRatio = parseFloat(this.value);
+        document.getElementById('headSizeValue').textContent = settings.headSizeRatio.toFixed(1);
+      });
+
+      document.getElementById('headSizeRatio').addEventListener('change', function () {
+        createNails();
+      });
+
+      // Min height
+      document.getElementById('minHeight').addEventListener('input', function () {
+        settings.minNailHeight = parseFloat(this.value);
+        document.getElementById('minHeightValue').textContent = settings.minNailHeight.toFixed(1);
+
+        // Ensure min is not greater than max
+        if (settings.minNailHeight > settings.maxNailHeight) {
+          settings.maxNailHeight = settings.minNailHeight;
+          document.getElementById('maxHeight').value = settings.maxNailHeight;
+          document.getElementById('maxHeightValue').textContent = settings.maxNailHeight.toFixed(1);
+        }
+      });
+
+      // Max height - use debounce for better performance
+      let heightTimeout;
+      document.getElementById('maxHeight').addEventListener('input', function () {
+        settings.maxNailHeight = parseFloat(this.value);
+        document.getElementById('maxHeightValue').textContent = settings.maxNailHeight.toFixed(1);
+
+        // Ensure max is not less than min
+        if (settings.maxNailHeight < settings.minNailHeight) {
+          settings.minNailHeight = settings.maxNailHeight;
+          document.getElementById('minHeight').value = settings.minNailHeight;
+          document.getElementById('minHeightValue').textContent = settings.minNailHeight.toFixed(1);
+        }
+
+        clearTimeout(heightTimeout);
+        heightTimeout = setTimeout(() => {
+          createNails();
+        }, 300);
+      });
+
+      // Auto rotate
+      document.getElementById('autoRotate').addEventListener('change', function () {
+        settings.autoRotate = this.checked;
+        controls.autoRotate = settings.autoRotate;
+      });
+
+      // Regenerate button
+      document.getElementById('regenerate').addEventListener('click', function () {
+        createNails();
+      });
+
+      // Screenshot button
+      document.getElementById('screenshot').addEventListener('click', function () {
+        renderer.render(scene, camera);
+        const dataURL = renderer.domElement.toDataURL('image/png');
+
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = 'nirmana-paku-3d.png';
+        link.click();
+      });
+
+      // Initialize value displays
+      document.getElementById('minHeightValue').textContent = settings.minNailHeight.toFixed(1);
+      document.getElementById('maxHeightValue').textContent = settings.maxNailHeight.toFixed(1);
+      document.getElementById('headSizeValue').textContent = settings.headSizeRatio.toFixed(1);
+      document.getElementById('spacingValue').textContent = settings.nailSpacing.toFixed(1);
+      document.getElementById('topMarginValue').textContent = settings.topMargin.toFixed(1);
+      document.getElementById('edgeMarginValue').textContent = settings.edgeMargin.toFixed(1);
+
+      // Initialize actual nail count display
+      const expectedCount = settings.nailGrid * settings.nailGrid;
+      document.getElementById('actualNailCount').textContent = expectedCount;
+
+      // Initialize board size display
+      document.getElementById('boardSizeDisplay').textContent = settings.boardSize.toFixed(1) + ' cm';
+    }
+
+    // Handle window resize
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Start the application
+    window.addEventListener('load', init);
+  </script>
+</body>
+
+</html>

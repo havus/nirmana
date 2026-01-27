@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulasi Papan MDF dengan Margin</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --bg-light: #f8fafc;
+      --bg-dark: #1e293b;
+      --text-light: #334155;
+      --text-dark: #f1f5f9;
+      --dot-light: #cbd5e1;
+      --dot-dark: #475569;
+      --line-light: #ccc;
+      --line-dark: #64748b;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --hit-area-size: 20px;
+      --marker-blue: #0066ff;
+      --marker-orange: #ff6600;
+      --dot-number: 9; /* New variable for dot number */
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark-mode {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .app-title {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: 600;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 8px 20px;
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      transition: background 0.3s;
+    }
+
+    body.dark-mode .app-title {
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 90%;
+      max-width: 600px;
+      transition: all 0.5s ease; /* Increased transition time for smoother animation */
+    }
+
+    body.dark-mode #controls {
+      background: rgba(30, 41, 59, 0.9);
+    }
+
+    /* New styles for collapsible controls with smoother animation */
+    #controls.collapsed {
+      transform: translateX(-50%) translateY(calc(100% - 50px));
+    }
+
+    .controls-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding-bottom: 5px;
+      margin-bottom: 5px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark-mode .controls-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .controls-title {
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .controls-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+      transition: max-height 0.5s ease, opacity 0.5s ease; /* Smoother animation */
+      opacity: 1;
+      max-height: 1000px; /* Large enough to contain all content */
+    }
+
+    #controls.collapsed .controls-content {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .toggle-icon {
+      transition: transform 0.5s ease; /* Smoother animation */
+    }
+
+    #controls.collapsed .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button, input {
+      margin: 2px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode button, 
+    body.dark-mode input {
+      background: #334155;
+      color: white;
+      border-color: #475569;
+    }
+
+    button:hover {
+      background: #f1f5f9;
+    }
+
+    body.dark-mode button:hover {
+      background: #475569;
+    }
+
+    button.primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    button.primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .color-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+      cursor: pointer;
+      display: inline-block;
+      margin: 0 5px;
+      transition: all 0.2s;
+    }
+
+    .color-btn.active {
+      border: 2px solid #000;
+      transform: scale(1.1);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+    }
+
+    body.dark-mode .color-btn.active {
+      border: 2px solid white;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 12px;
+    }
+
+    .tool-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .tool-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    #container {
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--bg-light);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      cursor: grab;
+      transition: background-color 0.3s;
+      position: relative;
+    }
+
+    body.dark-mode #container {
+      background-color: var(--bg-dark);
+    }
+
+    #container.grabbing {
+      cursor: grabbing;
+    }
+
+    #grid-container {
+      position: relative;
+      transform-origin: center center;
+      transition: transform 0.05s ease-out;
+    }
+
+    .grid-container {
+      position: relative;
+      background-color: transparent;
+      border: 2px solid #333;
+      margin-top: 10px;
+    }
+
+    body.dark-mode .grid-container {
+      border-color: #64748b;
+    }
+
+    .dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: var(--dot-light);
+      border-radius: 50%;
+      transform: translate(-45%, -45%);
+      z-index: 2;
+      transition: background-color 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 4.2px;
+      font-weight: bold;
+      color: white;
+      pointer-events: auto; /* Ensure dots can be clicked */
+    }
+
+    .dot span {
+      display: none; /* Hide the number by default */
+    }
+
+    /* Show the number only when dot has a color class or custom background color */
+    .dot.color-red span,
+    .dot.color-blue span,
+    .dot.color-green span,
+    .dot.color-yellow span,
+    .dot.color-purple span,
+    .dot.color-orange span,
+    .dot.color-pink span,
+    .dot.color-teal span,
+    .dot[style*="background-color"] span {
+      display: block;
+    }
+
+    /* Add a larger hit area for dots */
+    .dot::after {
+      content: '';
+      position: absolute;
+      width: var(--hit-area-size, 20px);
+      height: var(--hit-area-size, 20px);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      z-index: -1; /* Move behind the dot to prevent interference */
+    }
+
+    .line {
+      position: absolute;
+      background-color: var(--line-light);
+      z-index: 1;
+      transition: background-color 0.2s;
+      pointer-events: none; /* Prevent lines from interfering with dot clicks */
+    }
+
+    body.dark-mode .line {
+      background-color: var(--line-dark);
+    }
+
+    .line.horizontal {
+      height: 1px;
+      width: 100%;
+    }
+
+    .line.vertical {
+      width: 1px;
+      height: 100%;
+    }
+
+    /* Marker styles */
+    .marker {
+      position: absolute;
+      z-index: 3;
+      pointer-events: none; /* Prevent markers from interfering with dot clicks */
+    }
+
+    .marker.horizontal {
+      width: 10px;
+      height: 2px;
+    }
+
+    .marker.vertical {
+      width: 2px;
+      height: 10px;
+    }
+
+    .marker.blue {
+      background-color: var(--marker-blue);
+    }
+
+    .marker.orange {
+      background-color: var(--marker-orange);
+    }
+
+    /* Top markers */
+    .marker.top {
+      top: -6px;
+      transform: translateX(-50%);
+    }
+
+    /* Bottom markers */
+    .marker.bottom {
+      bottom: -6px;
+      transform: translateX(-50%);
+    }
+
+    /* Left markers */
+    .marker.left {
+      left: -6px;
+      transform: translateY(-50%);
+    }
+
+    /* Right markers */
+    .marker.right {
+      right: -6px;
+      transform: translateY(-50%);
+    }
+
+    #zoom-info {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: var(--shadow);
+      z-index: 10;
+      transition: background 0.3s;
+    }
+
+    body.dark-mode #zoom-info {
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      background: #ddd;
+      border-radius: 3px;
+      outline: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    body.dark-mode input[type="range"] {
+      background: #475569;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .custom-color-picker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 50%;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 50%;
+    }
+
+    /* New dot number setting styles */
+    .dot-number-setting {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mode-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 20;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow);
+      transition: background 0.3s;
+    }
+
+    /* Increase hit area for mode toggle button */
+    .mode-toggle::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      padding: 10px;
+      margin: -10px;
+      border-radius: 50%;
+    }
+
+    body.dark-mode .mode-toggle {
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    .mode-toggle svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-light);
+      transition: color 0.3s;
+    }
+
+    body.dark-mode .mode-toggle svg {
+      color: var(--text-dark);
+    }
+
+    /* Mobile Alert Styles */
+    #mobile-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+
+    #mobile-overlay.hidden {
+      display: none;
+    }
+
+    .mobile-alert {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 90%;
+      width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.5s ease-out;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark-mode .mobile-alert {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .mobile-alert h2 {
+      margin-top: 10px;
+      margin-bottom: 15px;
+      font-size: 24px;
+      color: var(--primary);
+    }
+
+    .mobile-alert p {
+      margin-bottom: 15px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .alert-icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 15px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .alert-icon svg {
+      width: 30px;
+      height: 30px;
+      color: white;
+    }
+
+    .devices-illustration {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 25px 0;
+      gap: 15px;
+    }
+
+    .device {
+      position: relative;
+    }
+
+    .device.phone {
+      width: 40px;
+      height: 70px;
+      border: 3px solid var(--text-light);
+      border-radius: 8px;
+      transition: border-color 0.3s;
+    }
+
+    body.dark-mode .device.phone {
+      border-color: var(--text-dark);
+    }
+
+    .device.phone .device-screen {
+      width: 34px;
+      height: 50px;
+      background-color: #ddd;
+      margin: 3px;
+      border-radius: 2px;
+      transition: background-color 0.3s;
+    }
+
+    body.dark-mode .device.phone .device-screen {
+      background-color: #555;
+    }
+
+    .device.phone .device-home {
+      width: 10px;
+      height: 10px;
+      border: 2px solid var(--text-light);
+      border-radius: 50%;
+      margin: 2px auto;
+      transition: border-color 0.3s;
+    }
+
+    body.dark-mode .device.phone .device-home {
+      border-color: var(--text-dark);
+    }
+
+    .device.laptop {
+      width: 90px;
+      height: 60px;
+    }
+
+    .device.laptop .device-screen {
+      width: 90px;
+      height: 60px;
+      background-color: #ddd;
+      border: 3px solid var(--text-light);
+      border-radius: 5px 5px 0 0;
+      position: relative;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+
+    body.dark-mode .device.laptop .device-screen {
+      background-color: #555;
+      border-color: var(--text-dark);
+    }
+
+    .device.laptop .device-dots {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: grid;
+      grid-template-columns: repeat(3, 6px);
+      grid-template-rows: repeat(3, 6px);
+      gap: 2px;
+    }
+
+    .device.laptop .device-dots::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      grid-column: span 1;
+      grid-row: span 1;
+      box-shadow: 8px 0 0 var(--primary), 16px 0 0 var(--primary),
+                  0 8px 0 var(--primary), 8px 8px 0 var(--primary), 16px 8px 0 var(--primary),
+                  0 16px 0 var(--primary), 8px 16px 0 var(--primary), 16px 16px 0 var(--primary);
+    }
+
+    .device.laptop .device-base {
+      width: 110px;
+      height: 10px;
+      background-color: var(--text-light);
+      margin-left: -10px;
+      border-radius: 0 0 5px 5px;
+      transition: background-color 0.3s;
+    }
+
+    body.dark-mode .device.laptop .device-base {
+      background-color: var(--text-dark);
+    }
+
+    .arrow {
+      font-size: 24px;
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .device-x {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      width: 25px;
+      height: 25px;
+      background-color: #ef4444;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .device-check {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      width: 25px;
+      height: 25px;
+      background-color: #22c55e;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    #continue-anyway {
+      margin-top: 10px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    #continue-anyway:hover {
+      background-color: var(--primary-dark);
+    }
+
+    /* Color classes */
+    .color-red {
+      background-color: #ef4444 !important;
+    }
+
+    .color-blue {
+      background-color: #3b82f6 !important;
+    }
+
+    .color-green {
+      background-color: #22c55e !important;
+    }
+
+    .color-yellow {
+      background-color: #eab308 !important;
+    }
+
+    .color-purple {
+      background-color: #a855f7 !important;
+    }
+
+    .color-orange {
+      background-color: #f97316 !important;
+    }
+
+    .color-pink {
+      background-color: #ec4899 !important;
+    }
+
+    .color-teal {
+      background-color: #14b8a6 !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="mobile-overlay" class="hidden">
+    <div class="mobile-alert">
+      <div class="alert-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12" y2="18.01"></line>
+        </svg>
+      </div>
+      <h2>Desktop Device Required</h2>
+      <p>This application is designed for desktop/laptop use with a mouse for the best experience.</p>
+      <p>Please open this application on a computer with a larger screen.</p>
+      <div class="devices-illustration">
+        <div class="device phone">
+          <div class="device-screen"></div>
+          <div class="device-home"></div>
+          <div class="device-x">✕</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="device laptop">
+          <div class="device-screen">
+            <div class="device-dots"></div>
+          </div>
+          <div class="device-base"></div>
+          <div class="device-check">✓</div>
+        </div>
+      </div>
+      <button id="continue-anyway" class="primary">Continue Anyway</button>
+    </div>
+  </div>
+  <h1 class="app-title">Simulasi Papan MDF dengan Margin</h1>
+  
+  <button class="mode-toggle" onclick="toggleDarkMode()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" id="moon-icon"></path>
+      <circle cx="12" cy="12" r="5" id="sun-circle" style="display:none"></circle>
+      <line x1="12" y1="1" x2="12" y2="3" id="sun-line-1" style="display:none"></line>
+      <line x1="12" y1="21" x2="12" y2="23" id="sun-line-2" style="display:none"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" id="sun-line-3" style="display:none"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" id="sun-line-4" style="display:none"></line>
+      <line x1="1" y1="12" x2="3" y2="12" id="sun-line-5" style="display:none"></line>
+      <line x1="21" y1="12" x2="23" y2="12" id="sun-line-6" style="display:none"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" id="sun-line-7" style="display:none"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" id="sun-line-8" style="display:none"></line>
+    </svg>
+  </button>
+
+  <div id="zoom-info">Zoom: 100%</div>
+
+  <div id="controls">
+    <!-- New header for collapsible controls -->
+    <div class="controls-header" id="controls-header">
+      <div class="controls-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        Pengaturan
+      </div>
+      <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </div>
+    
+    <!-- Controls content that will be collapsed -->
+    <div class="controls-content">
+      <div class="control-row">
+        <label>Lebar papan (cm): <input type="number" id="width" value="42" min="10" max="100"></label>
+        <label>Tinggi papan (cm): <input type="number" id="height" value="42" min="10" max="100"></label>
+      </div>
+      <div class="control-row">
+        <label>Jarak antar garis (cm): <input type="number" id="spacing" value="1" min="1" max="42"></label>
+        <label>Margin dari tepi (cm): <input type="number" id="margin" value="1" min="0" max="20"></label>
+      </div>
+      
+      <!-- New dot number setting -->
+      <div class="control-row">
+        <div class="dot-number-setting">
+          <label for="dot-number">Angka pada dot: </label>
+          <input type="number" id="dot-number" value="9" min="0" max="9" step="1">
+          <button onclick="updateDotNumber()" class="primary">Terapkan</button>
+        </div>
+      </div>
+      
+      <div class="control-row">
+        <div class="control-group">
+          <button id="pencil-tool" class="tool-btn active" onclick="setTool('pencil')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            Pencil
+          </button>
+          <button id="eraser-tool" class="tool-btn" onclick="setTool('eraser')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+            Eraser
+          </button>
+          <button id="fill-tool" class="tool-btn" onclick="setTool('fill')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"/><path d="m5 2 5 5"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z"/></svg>
+            Fill All
+          </button>
+        </div>
+        <div class="control-group">
+          <button onclick="resetView()" class="tool-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset View
+          </button>
+          <button onclick="clearAllDots()" class="tool-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            Clear All
+          </button>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div>
+          <label>Colors:</label>
+          <div id="color-red" class="color-btn color-red active" onclick="pilihWarna('red')"></div>
+          <div id="color-blue" class="color-btn color-blue" onclick="pilihWarna('blue')"></div>
+          <div id="color-green" class="color-btn color-green" onclick="pilihWarna('green')"></div>
+          <div id="color-yellow" class="color-btn color-yellow" onclick="pilihWarna('yellow')"></div>
+          <div id="color-purple" class="color-btn color-purple" onclick="pilihWarna('purple')"></div>
+          <div id="color-orange" class="color-btn color-orange" onclick="pilihWarna('orange')"></div>
+          <div id="color-pink" class="color-btn color-pink" onclick="pilihWarna('pink')"></div>
+          <div id="color-teal" class="color-btn color-teal" onclick="pilihWarna('teal')"></div>
+        </div>
+        <div class="custom-color-picker">
+          <label for="custom-color">Custom:</label>
+          <input type="color" id="custom-color" value="#6366f1" oninput="setCustomColor(this.value)">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <button onclick="generateGrid()" class="primary">Buat Grid</button>
+        <button onclick="saveGrid()" class="primary">Save Grid</button>
+        <button onclick="loadGrid()" class="primary">Load Grid</button>
+        <button onclick="exportImage()" class="primary">Export Image</button>
+      </div>
+      <p id="info"></p>
+    </div>
+  </div>
+
+  <div id="container">
+    <div id="grid-container">
+      <div class="grid-container" id="grid"></div>
+    </div>
+  </div>
+
+  <script>
+    // Mobile detection
+    function isMobileDevice() {
+      // Check for actual mobile device
+      const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+      const isMobile = mobileRegex.test(navigator.userAgent);
+      
+      // Check for small screen size (typical for mobile or emulated devices)
+      const isSmallScreen = window.innerWidth < 768;
+      
+      // Check for touch capability
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      
+      // Check for device emulation in Chrome DevTools
+      const isEmulated = /CriOS/.test(navigator.userAgent) && window.chrome && window.chrome.emulation;
+      
+      return isMobile || (isSmallScreen && isTouchDevice) || isEmulated;
+    }
+
+    function showMobileAlert() {
+      const mobileOverlay = document.getElementById('mobile-overlay');
+      mobileOverlay.classList.remove('hidden');
+      
+      // Add event listener to "Continue Anyway" button
+      document.getElementById('continue-anyway').addEventListener('click', function() {
+        mobileOverlay.classList.add('hidden');
+      });
+    }
+
+    // Check if mobile and show alert
+    if (isMobileDevice()) {
+      // Wait for DOM to be fully loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        showMobileAlert();
+      });
+    }
+
+    // Also check on resize (for device emulation toggle)
+    window.addEventListener('resize', function() {
+      if (isMobileDevice() && document.getElementById('mobile-overlay').classList.contains('hidden')) {
+        showMobileAlert();
+      }
+    });
+
+    // Global variables
+    const grid = document.getElementById('grid');
+    const gridContainer = document.getElementById('grid-container');
+    const container = document.getElementById('container');
+    const zoomInfo = document.getElementById('zoom-info');
+    const controlsPanel = document.getElementById('controls');
+    const controlsHeader = document.getElementById('controls-header');
+    let scale = 1;
+    let xOffset = 0;
+    let yOffset = 0;
+    let isDragging = false;
+    let startX, startY;
+    let isSelecting = false;
+    let firstDot = null;
+    let isMouseDown = false;
+    let selectedColor = 'red'; // Default color
+    let currentTool = 'pencil'; // Default tool
+    let customColor = '#6366f1';
+    let lastSelectedDot = null;
+    let lastSelectedIndex = -1;
+    let dotState = {}; // Store dot states for dark mode persistence
+    let isInsideGrid = false; // Track if cursor is inside grid
+    let isControlsCollapsed = false; // Track if controls are collapsed
+    let dotNumber = 9; // Default dot number
+
+    // Update dot number
+    function updateDotNumber() {
+      const newNumber = parseInt(document.getElementById('dot-number').value);
+      if (newNumber >= 0 && newNumber <= 9) {
+        dotNumber = newNumber;
+        document.documentElement.style.setProperty('--dot-number', dotNumber);
+        
+        // Update all existing dots
+        document.querySelectorAll('.dot span').forEach(span => {
+          span.textContent = dotNumber.toString();
+        });
+      }
+    }
+
+    // Toggle controls collapse with smooth animation
+    controlsHeader.addEventListener('click', function() {
+      isControlsCollapsed = !isControlsCollapsed;
+      if (isControlsCollapsed) {
+        controlsPanel.classList.add('collapsed');
+      } else {
+        controlsPanel.classList.remove('collapsed');
+      }
+    });
+
+    // Set active tool
+    function setTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`${tool}-tool`).classList.add('active');
+    }
+
+    // Toggle dark mode
+    function toggleDarkMode() {
+      // Save current dot states before toggling
+      saveDotStates();
+      
+      document.body.classList.toggle('dark-mode');
+      updateDarkModeIcon();
+      
+      // Restore dot states after toggling
+      restoreDotStates();
+    }
+
+    // Save dot states before toggling dark mode
+    function saveDotStates() {
+      dotState = {};
+      document.querySelectorAll('.dot').forEach(dot => {
+        const index = dot.dataset.index;
+        let color = '';
+        
+        // Check for inline style (custom color)
+        if (dot.style.backgroundColor && dot.style.backgroundColor !== '') {
+          color = dot.style.backgroundColor;
+        } else {
+          // Check for color classes
+          for (const className of dot.classList) {
+            if (className.startsWith('color-')) {
+              color = className;
+              break;
+            }
+          }
+        }
+        
+        if (color) {
+          dotState[index] = color;
+        }
+      });
+    }
+
+    // Restore dot states after toggling dark mode
+    function restoreDotStates() {
+      document.querySelectorAll('.dot').forEach(dot => {
+        const index = dot.dataset.index;
+        if (dotState[index]) {
+          removeColorClasses(dot);
+          
+          if (dotState[index].startsWith('color-')) {
+            dot.classList.add(dotState[index]);
+          } else {
+            dot.style.backgroundColor = dotState[index];
+          }
+        }
+      });
+    }
+
+    // Update dark mode icon
+    function updateDarkModeIcon() {
+      const isDarkMode = document.body.classList.contains('dark-mode');
+      document.getElementById('moon-icon').style.display = isDarkMode ? 'none' : 'block';
+      
+      const sunElements = ['sun-circle', 'sun-line-1', 'sun-line-2', 'sun-line-3', 
+                          'sun-line-4', 'sun-line-5', 'sun-line-6', 'sun-line-7', 'sun-line-8'];
+      
+      sunElements.forEach(id => {
+        document.getElementById(id).style.display = isDarkMode ? 'block' : 'none';
+      });
+    }
+
+    // Set custom color
+    function setCustomColor(color) {
+      customColor = color;
+      selectedColor = 'custom';
+      
+      // Update active state on color buttons
+      document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+    }
+
+    // Pilih warna
+    function pilihWarna(color) {
+      selectedColor = color;
+      
+      // Update active state pada tombol warna
+      document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`color-${color}`).classList.add('active');
+    }
+
+    // Generate grid based on inputs
+    function generateGrid() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
+
+      const widthCm = parseInt(document.getElementById("width").value);
+      const heightCm = parseInt(document.getElementById("height").value);
+      const spacing = parseInt(document.getElementById("spacing").value) * 10;
+      const margin = parseInt(document.getElementById("margin").value) * 10;
+
+      const width = widthCm * 10;
+      const height = heightCm * 10;
+
+      grid.style.width = width + "px";
+      grid.style.height = height + "px";
+
+      const usableWidth = width - margin * 2;
+      const usableHeight = height - margin * 2;
+
+      const countX = Math.floor(usableWidth / spacing) + 1;
+      const countY = Math.floor(usableHeight / spacing) + 1;
+
+      // Create lines first (so dots appear on top)
+      // Garis horizontal
+      for (let y = 0; y < countY; y++) {
+        const line = document.createElement("div");
+        line.classList.add("line", "horizontal");
+        line.style.top = `${margin + y * spacing}px`;
+        line.style.left = `0px`;
+        line.style.width = `${width}px`;
+        grid.appendChild(line);
+      }
+
+      // Garis vertikal
+      for (let x = 0; x < countX; x++) {
+        const line = document.createElement("div");
+        line.classList.add("line", "vertical");
+        line.style.left = `${margin + x * spacing}px`;
+        line.style.top = `0px`;
+        line.style.height = `${height}px`;
+        grid.appendChild(line);
+      }
+
+      // Titik paku (dots) - now exactly at intersections
+      for (let y = 0; y < countY; y++) {
+        for (let x = 0; x < countX; x++) {
+          const dot = document.createElement("div");
+          dot.classList.add("dot");
+          dot.dataset.index = y * countX + x;
+          // Position dots exactly at the intersection points
+          dot.style.left = `${margin + x * spacing}px`;
+          dot.style.top = `${margin + y * spacing}px`;
+          // Add the number inside a span with current dotNumber value
+          const numberSpan = document.createElement("span");
+          numberSpan.textContent = dotNumber.toString();
+          dot.appendChild(numberSpan);
+          
+          // Use mousedown/mouseover for desktop
+          dot.addEventListener('mousedown', function(e) {
+            // Prevent event propagation to avoid grid dragging when clicking dots
+            e.stopPropagation();
+            startSelect(e);
+          });
+          
+          dot.addEventListener('mouseover', function(e) {
+            // Prevent event propagation
+            e.stopPropagation();
+            continueSelect(e);
+          });
+          
+          // Use touchstart/touchmove for mobile
+          dot.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleTouchStart(e);
+          });
+          
+          dot.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleTouchMove(e);
+          });
+          
+          grid.appendChild(dot);
+        }
+      }
+
+      // Add markers on all four sides
+      addGridMarkers(width, height, margin, spacing, countX, countY);
+
+      document.getElementById("info").innerText =
+        `Ukuran papan: ${widthCm}cm x ${heightCm}cm | Total paku: ${countX * countY} | ` +
+        `Garis horizontal: ${countY} | Garis vertikal: ${countX}`;
+      
+      resetView();
+      
+      // Add mouse enter/leave events for grid to change cursor
+      grid.addEventListener('mouseenter', function() {
+        isInsideGrid = true;
+        updateCursor();
+      });
+      
+      grid.addEventListener('mouseleave', function() {
+        isInsideGrid = false;
+        updateCursor();
+      });
+
+      adjustHitArea(countX, countY);
+    }
+
+    // Add markers to all four sides of the grid
+    function addGridMarkers(width, height, margin, spacing, countX, countY) {
+      // Calculate positions for markers
+      // We want 3 markers on each side: at approximately 1/4, 1/2, and 3/4 positions
+      // But they must align with internal grid lines
+      
+      // For top and bottom (horizontal markers)
+      const topBottomPositions = [
+        Math.floor(countX / 4),                // ~1/4 position
+        Math.floor(countX / 2),                // middle position
+        Math.floor(countX * 3 / 4)             // ~3/4 position
+      ];
+      
+      // For left and right (vertical markers)
+      const leftRightPositions = [
+        Math.floor(countY / 4),                // ~1/4 position
+        Math.floor(countY / 2),                // middle position
+        Math.floor(countY * 3 / 4)             // ~3/4 position
+      ];
+      
+      // Create top markers (horizontal lines)
+      topBottomPositions.forEach((pos, index) => {
+        const marker = document.createElement("div");
+        marker.classList.add("marker", "horizontal", "top");
+        marker.classList.add(index === 1 ? "orange" : "blue"); // Middle marker is orange
+        marker.style.left = `${margin + pos * spacing}px`;
+        grid.appendChild(marker);
+      });
+      
+      // Create bottom markers (horizontal lines)
+      topBottomPositions.forEach((pos, index) => {
+        const marker = document.createElement("div");
+        marker.classList.add("marker", "horizontal", "bottom");
+        marker.classList.add(index === 1 ? "orange" : "blue"); // Middle marker is orange
+        marker.style.left = `${margin + pos * spacing}px`;
+        grid.appendChild(marker);
+      });
+      
+      // Create left markers (vertical lines)
+      leftRightPositions.forEach((pos, index) => {
+        const marker = document.createElement("div");
+        marker.classList.add("marker", "vertical", "left");
+        marker.classList.add(index === 1 ? "orange" : "blue"); // Middle marker is orange
+        marker.style.top = `${margin + pos * spacing}px`;
+        grid.appendChild(marker);
+      });
+      
+      // Create right markers (vertical lines)
+      leftRightPositions.forEach((pos, index) => {
+        const marker = document.createElement("div");
+        marker.classList.add("marker", "vertical", "right");
+        marker.classList.add(index === 1 ? "orange" : "blue"); // Middle marker is orange
+        marker.style.top = `${margin + pos * spacing}px`;
+        grid.appendChild(marker);
+      });
+    }
+
+    // Adjust hit area based on dot density
+    function adjustHitArea(countX, countY) {
+      // Calculate a reasonable hit area size based on grid density
+      // More dots = smaller hit area to prevent overlap
+      const totalDots = countX * countY;
+      let hitAreaSize = 20; // Default size
+      
+      if (totalDots > 1000) {
+        hitAreaSize = 8;
+      } else if (totalDots > 500) {
+        hitAreaSize = 10;
+      } else if (totalDots > 200) {
+        hitAreaSize = 15;
+      }
+      
+      // Update the CSS custom property
+      document.documentElement.style.setProperty('--hit-area-size', hitAreaSize + 'px');
+    }
+    
+    // Update cursor based on position (inside or outside grid)
+    function updateCursor() {
+      if (isDragging) {
+        container.style.cursor = 'grabbing';
+        return;
+      }
+      
+      if (isInsideGrid) {
+        container.style.cursor = 'default'; // Change to default cursor inside grid
+      } else {
+        container.style.cursor = 'grab'; // Keep grab cursor outside grid
+      }
+    }
+
+    // Handle touch events for mobile
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const dot = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (dot && dot.classList.contains('dot')) {
+        startSelect({ target: dot });
+      }
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const dot = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (dot && dot.classList.contains('dot')) {
+        continueSelect({ target: dot });
+      }
+    }
+
+    // Reset posisi dan zoom
+    function resetView() {
+      scale = 1;
+      xOffset = 0;
+      yOffset = 0;
+      updateTransform();
+      updateZoomInfo();
+    }
+
+    // Update zoom info display
+    function updateZoomInfo() {
+      zoomInfo.textContent = `Zoom: ${Math.round(scale * 100)}%`;
+    }
+
+    // Update transform untuk zoom dan posisi
+    function updateTransform() {
+      gridContainer.style.transform = `scale(${scale}) translate(${xOffset}px, ${yOffset}px)`;
+    }
+
+    // Fill all dots with selected color
+    function fillAllDots() {
+      document.querySelectorAll('.dot').forEach(dot => {
+        removeColorClasses(dot);
+        if (selectedColor === 'custom') {
+          dot.style.backgroundColor = customColor;
+        } else {
+          dot.classList.add(`color-${selectedColor}`);
+          dot.style.backgroundColor = '';
+        }
+      });
+    }
+
+    // Clear all dots (reset to default color)
+    function clearAllDots() {
+      document.querySelectorAll('.dot').forEach(dot => {
+        removeColorClasses(dot);
+        dot.style.backgroundColor = '';
+      });
+    }
+
+    // Mulai memilih dengan klik
+    function startSelect(e) {
+      if (isMouseDown) return;
+      
+      firstDot = e.target;
+      // Make sure we're working with the dot element, not a child element
+      if (!firstDot.classList.contains('dot')) {
+        firstDot = firstDot.closest('.dot');
+        if (!firstDot) return;
+      }
+      
+      lastSelectedDot = firstDot;
+      lastSelectedIndex = parseInt(firstDot.dataset.index);
+      
+      if (currentTool === 'fill') {
+        fillAllDots();
+        return;
+      }
+      
+      // Apply color or erase based on current tool
+      applyToolToDot(firstDot);
+      
+      isSelecting = true;
+      isMouseDown = true;
+      
+      // Prevent default to avoid unwanted drag behavior
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Apply the current tool to a dot
+    function applyToolToDot(dot) {
+      removeColorClasses(dot);
+      
+      if (currentTool === 'eraser') {
+        dot.style.backgroundColor = '';
+      } else if (selectedColor === 'custom') {
+        dot.style.backgroundColor = customColor;
+      } else {
+        dot.classList.add(`color-${selectedColor}`);
+        dot.style.backgroundColor = '';
+      }
+    }
+
+    // Hapus semua kelas warna
+    function removeColorClasses(element) {
+      element.classList.remove(
+        'color-red', 'color-blue', 'color-green', 
+        'color-yellow', 'color-purple', 'color-orange',
+        'color-pink', 'color-teal'
+      );
+    }
+
+    // Improved selection logic for better diagonal selection
+    function continueSelect(e) {
+      if (!isSelecting || !firstDot) return;
+      
+      let currentDot = e.target;
+      // Make sure we're working with the dot element, not a child element
+      if (!currentDot.classList.contains('dot')) {
+        currentDot = currentDot.closest('.dot');
+        if (!currentDot) return;
+      }
+      
+      if (currentDot === lastSelectedDot) return;
+      
+      // Apply tool to current dot
+      applyToolToDot(currentDot);
+      
+      // Get indices for line drawing
+      const currentIndex = parseInt(currentDot.dataset.index);
+      
+      // Draw a line between last selected dot and current dot (Bresenham's line algorithm)
+      const dots = drawLineBetweenDots(lastSelectedIndex, currentIndex);
+      dots.forEach(index => {
+        if (index >= 0 && index < document.querySelectorAll('.dot').length) {
+          const dot = document.querySelectorAll('.dot')[index];
+          applyToolToDot(dot);
+        }
+      });
+      
+      lastSelectedDot = currentDot;
+      lastSelectedIndex = currentIndex;
+      
+      // Prevent default to avoid unwanted drag behavior
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Draw a line between two dots using Bresenham's algorithm adapted for grid
+    function drawLineBetweenDots(index1, index2) {
+      // Get grid dimensions
+      const dotsPerRow = Math.sqrt(document.querySelectorAll('.dot').length);
+      
+      // Convert indices to 2D coordinates
+      const x1 = index1 % dotsPerRow;
+      const y1 = Math.floor(index1 / dotsPerRow);
+      const x2 = index2 % dotsPerRow;
+      const y2 = Math.floor(index2 / dotsPerRow);
+      
+      const dots = [];
+      
+      // Bresenham's line algorithm
+      const dx = Math.abs(x2 - x1);
+      const dy = Math.abs(y2 - y1);
+      const sx = x1 < x2 ? 1 : -1;
+      const sy = y1 < y2 ? 1 : -1;
+      let err = dx - dy;
+      
+      let x = x1;
+      let y = y1;
+      
+      while (true) {
+        dots.push(y * dotsPerRow + x);
+        
+        if (x === x2 && y === y2) break;
+        
+        const e2 = 2 * err;
+        if (e2 > -dy) {
+          err -= dy;
+          x += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          y += sy;
+        }
+      }
+      
+      return dots;
+    }
+
+    // Save grid state to localStorage
+    function saveGrid() {
+      const gridData = [];
+      document.querySelectorAll('.dot').forEach(dot => {
+        let color = '';
+        if (dot.style.backgroundColor && dot.style.backgroundColor !== '') {
+          color = dot.style.backgroundColor;
+        } else {
+          for (const className of dot.classList) {
+            if (className.startsWith('color-')) {
+              color = className.substring(6);
+              break;
+            }
+          }
+        }
+        gridData.push(color);
+      });
+      
+      const gridInfo = {
+        width: document.getElementById("width").value,
+        height: document.getElementById("height").value,
+        spacing: document.getElementById("spacing").value,
+        margin: document.getElementById("margin").value,
+        dotNumber: dotNumber,
+        size: document.querySelectorAll('.dot').length,
+        data: gridData
+      };
+      
+      localStorage.setItem('gridData', JSON.stringify(gridInfo));
+      
+      alert('Grid saved successfully!');
+    }
+
+    // Load grid state from localStorage
+    function loadGrid() {
+      const savedData = localStorage.getItem('gridData');
+      if (!savedData) {
+        alert('No saved grid found!');
+        return;
+      }
+      
+      const gridInfo = JSON.parse(savedData);
+      
+      // Update input fields
+      document.getElementById("width").value = gridInfo.width;
+      document.getElementById("height").value = gridInfo.height;
+      document.getElementById("spacing").value = gridInfo.spacing;
+      document.getElementById("margin").value = gridInfo.margin;
+      
+      // Update dot number if available
+      if (gridInfo.dotNumber !== undefined) {
+        dotNumber = gridInfo.dotNumber;
+        document.getElementById("dot-number").value = dotNumber;
+        document.documentElement.style.setProperty('--dot-number', dotNumber);
+      }
+      
+      // Generate grid with saved parameters
+      generateGrid();
+      
+      // Apply colors
+      const dots = document.querySelectorAll('.dot');
+      gridInfo.data.forEach((color, index) => {
+        if (index < dots.length && color) {
+          const dot = dots[index];
+          removeColorClasses(dot);
+          
+          if (color.startsWith('#') || color.startsWith('rgb')) {
+            dot.style.backgroundColor = color;
+          } else {
+            dot.classList.add(`color-${color}`);
+          }
+        }
+      });
+      
+      alert('Grid loaded successfully!');
+    }
+
+    // Export grid as image
+    function exportImage() {
+      // Create a canvas element
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Get grid dimensions
+      const width = parseInt(document.getElementById("width").value) * 10;
+      const height = parseInt(document.getElementById("height").value) * 10;
+      
+      // Set canvas size
+      const padding = 20; // Padding around the grid
+      canvas.width = width + 2 * padding;
+      canvas.height = height + 2 * padding;
+      
+      // Fill background
+      ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#1e293b' : '#f8fafc';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw grid border
+      ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#64748b' : '#333';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(padding, padding, width, height);
+      
+      // Draw lines
+      document.querySelectorAll('.line').forEach(line => {
+        const isHorizontal = line.classList.contains('horizontal');
+        const position = isHorizontal ? 
+          parseInt(line.style.top) : 
+          parseInt(line.style.left);
+        
+        ctx.beginPath();
+        ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#64748b' : '#ccc';
+        ctx.lineWidth = 1;
+        
+        if (isHorizontal) {
+          ctx.moveTo(padding, padding + position);
+          ctx.lineTo(padding + width, padding + position);
+        } else {
+          ctx.moveTo(padding + position, padding);
+          ctx.lineTo(padding + position, padding + height);
+        }
+        
+        ctx.stroke();
+      });
+      
+      // Draw markers
+      document.querySelectorAll('.marker').forEach(marker => {
+        const isHorizontal = marker.classList.contains('horizontal');
+        const isBlue = marker.classList.contains('blue');
+        const isOrange = marker.classList.contains('orange');
+        const isTop = marker.classList.contains('top');
+        const isBottom = marker.classList.contains('bottom');
+        const isLeft = marker.classList.contains('left');
+        const isRight = marker.classList.contains('right');
+        
+        let x, y;
+        
+        if (isHorizontal) {
+          x = parseInt(marker.style.left) + padding;
+          y = isTop ? padding : padding + height;
+        } else {
+          x = isLeft ? padding : padding + width;
+          y = parseInt(marker.style.top) + padding;
+        }
+        
+        ctx.beginPath();
+        ctx.strokeStyle = isBlue ? '#0066ff' : '#ff6600';
+        ctx.lineWidth = 2;
+        
+        if (isHorizontal) {
+          ctx.moveTo(x, y - (isTop ? 5 : -5));
+          ctx.lineTo(x, y);
+        } else {
+          ctx.moveTo(x - (isLeft ? 5 : -5), y);
+          ctx.lineTo(x, y);
+        }
+        
+        ctx.stroke();
+      });
+      
+      // Draw dots
+      document.querySelectorAll('.dot').forEach(dot => {
+        const x = parseInt(dot.style.left) + padding;
+        const y = parseInt(dot.style.top) + padding;
+        
+        // Determine dot color
+        let color;
+        let isColored = false;
+        
+        if (dot.style.backgroundColor && dot.style.backgroundColor !== '') {
+          color = dot.style.backgroundColor;
+          isColored = true;
+        } else {
+          color = document.body.classList.contains('dark-mode') ? '#475569' : '#cbd5e1';
+          
+          for (const className of dot.classList) {
+            if (className.startsWith('color-')) {
+              switch(className) {
+                case 'color-red': color = '#ef4444'; isColored = true; break;
+                case 'color-blue': color = '#3b82f6'; isColored = true; break;
+                case 'color-green': color = '#22c55e'; isColored = true; break;
+                case 'color-yellow': color = '#eab308'; isColored = true; break;
+                case 'color-purple': color = '#a855f7'; isColored = true; break;
+                case 'color-orange': color = '#f97316'; isColored = true; break;
+                case 'color-pink': color = '#ec4899'; isColored = true; break;
+                case 'color-teal': color = '#14b8a6'; isColored = true; break;
+              }
+              break;
+            }
+          }
+        }
+        
+        // Draw the dot (now with 8px size)
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw the number in white only if the dot is colored
+        if (isColored) {
+          ctx.fillStyle = 'white';
+          ctx.font = '6px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(dotNumber.toString(), x, y);
+        }
+      });
+      
+      // Convert canvas to image and download
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'papan-mdf.png';
+      link.href = dataUrl;
+      link.click();
+    }
+
+    // Akhiri memilih dengan mouse release
+    window.addEventListener('mouseup', () => {
+      isSelecting = false;
+      firstDot = null;
+      isMouseDown = false;
+      lastSelectedDot = null;
+    });
+
+    // Improved zoom with mouse wheel
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const oldScale = scale;
+      scale = Math.max(0.1, Math.min(5, scale + delta));
+      
+      // Zoom toward mouse position
+      const rect = container.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const dx = (mouseX - centerX) / oldScale;
+      const dy = (mouseY - centerY) / oldScale;
+      
+      xOffset -= dx * (scale - oldScale) / scale;
+      yOffset -= dy * (scale - oldScale) / scale;
+      
+      updateTransform();
+      updateZoomInfo();
+    });
+
+    // Improved mouse drag for pan
+    container.addEventListener('mousedown', (e) => {
+      // Only start dragging if not clicking on a dot and outside grid
+      if (e.target.classList.contains('dot') || e.target.closest('.dot') || isInsideGrid) return;
+      
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      container.classList.add('grabbing');
+      updateCursor();
+    });
+
+    container.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      startX = e.clientX;
+      startY = e.clientY;
+      
+      xOffset += dx / scale;
+      yOffset += dy / scale;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        container.classList.remove('grabbing');
+        updateCursor();
+      }
+    });
+
+    container.addEventListener('mouseleave', () => {
+      if (isDragging) {
+        isDragging = false;
+        container.classList.remove('grabbing');
+        updateCursor();
+      }
+    });
+
+    // Touch events for mobile panning
+    container.addEventListener('touchstart', (e) => {
+      if (e.target.classList.contains('dot') || e.target.closest('.dot')) return;
+      
+      isDragging = true;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    });
+
+    container.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      
+      xOffset += dx / scale;
+      yOffset += dy / scale;
+      updateTransform();
+      
+      // Prevent default to avoid page scrolling while panning
+      e.preventDefault();
+    });
+
+    container.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+
+    // Initialize
+    generateGrid();
+    updateDarkModeIcon();
+  </script>
+</body>
+</html>

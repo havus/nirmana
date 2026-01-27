@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nirmana 2D to 3D Conversion - Thesis Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>Nirmana: Konversi Data 2D ke Visualisasi 3D</h1>
+      <p class="subtitle">Demonstrasi Implementasi Three.js untuk Skripsi</p>
+    </header>
+
+    <!-- Main Content -->
+    <div class="content">
+      <!-- Left Panel: 2D Data Structure -->
+      <div class="panel data-panel">
+        <h2>Data Structure 2D (Input)</h2>
+        <div class="data-description">
+          <p>Data struktur ini merepresentasikan posisi dan properti paku (nail) pada grid 2D:</p>
+          <ul>
+            <li><strong>nails</strong>: Object berisi data paku dengan key koordinat "x,y"</li>
+            <li><strong>height</strong>: Tinggi paku dalam mm (1-100)</li>
+            <li><strong>body_width</strong>: Lebar badan paku (1=thin, 2=medium, 3=thick)</li>
+            <li><strong>head_width</strong>: Lebar kepala paku (1=small, 2=medium, 3=large)</li>
+            <li><strong>gridWidth & gridHeight</strong>: Ukuran grid</li>
+            <li><strong>marginBetweenNails</strong>: Jarak antar paku dalam mm</li>
+          </ul>
+        </div>
+        <div class="code-editor">
+          <div class="editor-header">
+            <span>Editable JSON Data</span>
+            <button id="updateBtn" class="btn-update">Update 3D View</button>
+          </div>
+          <textarea id="dataInput" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <!-- Right Panel: 3D Visualization -->
+      <div class="panel scene-panel">
+        <h2>Visualisasi 3D (Output)</h2>
+        <div class="scene-info">
+          <div class="info-item">
+            <span class="label">Total Nails:</span>
+            <span id="nailCount" class="value">0</span>
+          </div>
+          <div class="info-item">
+            <span class="label">FPS:</span>
+            <span id="fps" class="value">60</span>
+          </div>
+        </div>
+        <div id="canvas-container" class="canvas-container"></div>
+        <div class="controls-info">
+          <p><strong>Kontrol:</strong></p>
+          <ul>
+            <li>Klik kiri + drag: Rotasi kamera</li>
+            <li>Scroll: Zoom in/out</li>
+            <li>Klik kanan + drag: Pan</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Explanation Section -->
+    <section class="explanation">
+      <h2>Proses Konversi 2D ke 3D</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Parsing Data Structure</h3>
+            <p>Data JSON 2D diparsing untuk mengekstrak informasi posisi (x,y), tinggi (height), dan dimensi paku
+              (body_width, head_width).</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Konversi Koordinat</h3>
+            <p>Koordinat grid 2D (x,y) dikonversi ke koordinat 3D Three.js (x,y,z) dengan perhitungan:</p>
+            <code>posX = (x - (gridWidth - 1) / 2) × marginBetweenNails</code><br>
+            <code>posZ = (y - (gridHeight - 1) / 2) × marginBetweenNails</code>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Instancing Geometry</h3>
+            <p>Menggunakan THREE.InstancedMesh untuk render efisien ribuan paku dengan 2 komponen:</p>
+            <ul>
+              <li><strong>Nail Shaft</strong>: CylinderGeometry dengan height dinamis</li>
+              <li><strong>Nail Head</strong>: CylinderGeometry dengan radius lebih besar</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3>Transformasi Matrix</h3>
+            <p>Setiap instance paku ditransformasi menggunakan Matrix4 untuk positioning dan scaling:</p>
+            <ul>
+              <li>Scale Y: Tinggi paku (height)</li>
+              <li>Scale X & Z: Lebar paku (body_width)</li>
+              <li>Position: Lokasi berdasarkan grid</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Nirmana Thesis Demo - 2D to 3D Conversion using Three.js</p>
+      <p>© 2025 - Demonstrasi untuk keperluan penelitian skripsi</p>
+    </footer>
+  </div>
+
+  <!-- Three.js Import -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="script.js"></script>
+</body>
+
+</html>

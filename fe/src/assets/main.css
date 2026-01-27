@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind CSS v4 Theme Configuration */
+@theme {
+  /* Dark mode configuration - use class strategy */
+  --dark-mode: class;
+
+  /* Color System */
+  --color-primary-50: #f0f9ff;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+
+  /* Typography */
+  --font-sans: "Poppins", "Inter", system-ui, sans-serif;
+}
+
+/* Custom CSS Variables for compatibility */
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --bg-light: #f8fafc;
+  --bg-dark: #1e293b;
+  --text-light: #334155;
+  --text-dark: #f1f5f9;
+  --dot-light: #cbd5e1;
+  --dot-dark: #475569;
+  --line-light: #ccc;
+  --line-dark: #64748b;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --hit-area-size: 20px;
+  --marker-blue: #0066ff;
+  --marker-orange: #ff6600;
+  --dot-number: 9;
+}
+
+/* Dark mode variables */
+.dark {
+  --bg-light: #1e293b;
+  --bg-dark: #0f172a;
+  --text-light: #f1f5f9;
+  --text-dark: #cbd5e1;
+  --dot-light: #475569;
+  --dot-dark: #64748b;
+}
+
+/* Custom 2D grid styles */
+.dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 4.2px;
+  font-weight: bold;
+  color: white;
+  pointer-events: auto;
+}
+
+.dot span {
+  display: none;
+}
+
+/* Show the number only when dot has a color class */
+.dot.color-red span,
+.dot.color-blue span,
+.dot.color-green span,
+.dot.color-yellow span,
+.dot.color-purple span,
+.dot.color-orange span,
+.dot.color-pink span,
+.dot.color-teal span,
+.dot[style*="background-color"] span {
+  display: block;
+}
+
+/* Hit area for dots */
+.dot::after {
+  content: '';
+  position: absolute;
+  width: var(--hit-area-size, 20px);
+  height: var(--hit-area-size, 20px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Marker styles */
+.marker {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Color classes for dots */
+.color-red {
+  background-color: #ef4444 !important;
+}
+
+.color-blue {
+  background-color: #3b82f6 !important;
+}
+
+.color-green {
+  background-color: #10b981 !important;
+}
+
+.color-yellow {
+  background-color: #f59e0b !important;
+}
+
+.color-purple {
+  background-color: #8b5cf6 !important;
+}
+
+.color-orange {
+  background-color: #f97316 !important;
+}
+
+.color-pink {
+  background-color: #ec4899 !important;
+}
+
+.color-teal {
+  background-color: #14b8a6 !important;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

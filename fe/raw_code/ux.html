@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Titik Interaktif</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #111;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            color: #fff;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #222;
+            border-radius: 10px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        label {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #eee;
+            font-size: 14px;
+        }
+        .number-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .number-btn {
+            width: 35px;
+            height: 35px;
+            border: 2px solid #555;
+            border-radius: 6px;
+            background-color: #333;
+            color: #eee;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .number-btn.active {
+            border-color: #2196F3;
+            background-color: #2196F3;
+            color: white;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.6);
+        }
+        .number-btn:hover {
+            border-color: #777;
+            background-color: #444;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #2196F3;
+        }
+        button.secondary:hover {
+            background-color: #1976D2;
+        }
+        button.danger {
+            background-color: #f44336;
+        }
+        button.danger:hover {
+            background-color: #d32f2f;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+        
+        .left-panel {
+            flex: 0 0 250px;
+            background-color: #222;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .left-panel h3 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .ring-explanation {
+            color: #ccc;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .ring-explanation p {
+            margin-bottom: 10px;
+        }
+        
+        .ring-explanation .ring-type {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .grid-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .right-panel {
+            flex: 0 0 200px;
+            background-color: #222;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .right-panel h3 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        
+        .color-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .color-btn {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #555;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .color-btn.active {
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+            transform: scale(1.1);
+        }
+        .color-btn:hover {
+            transform: scale(1.05);
+            border-color: #777;
+        }
+
+        .dot-grid {
+            display: grid;
+            gap: 12px;
+            padding: 20px;
+            background-color: #222;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .dot {
+            width: 24px;
+            height: 24px;
+            background-color: #555;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .dot:hover::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid white;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .dot.highlighted {
+            /* Remove the dot glow, only keep ring glow */
+        }
+        .dot.dimmed {
+            opacity: 0.3;
+            transform: scale(0.85);
+        }
+        .dot.dimmed:hover::after {
+            display: none;
+        }
+        
+        /* Ring effects - Default position (right & left) - Medium size */
+        .dot.has-content.ring-default::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid white;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 25%, 75% 50%, 100% 75%, 100% 100%, 0% 100%, 0% 75%, 25% 50%, 0% 25%);
+        }
+        
+        /* Ring effects - Bottom position - Small size */
+        .dot.has-content.ring-bottom::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid white;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+            clip-path: polygon(25% 75%, 75% 75%, 100% 100%, 0% 100%);
+        }
+        
+        /* Ring effects - Top position - Large size */
+        .dot.has-content.ring-top::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid white;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+            clip-path: polygon(0% 0%, 100% 0%, 75% 25%, 25% 25%);
+        }
+        
+        /* Highlighted ring effects - only rings glow, not dots */
+        .dot.highlighted.has-content.ring-default::before {
+            box-shadow: 0 0 8px 3px rgba(255, 255, 255, 0.6);
+            border-width: 3px;
+        }
+        
+        .dot.highlighted.has-content.ring-bottom::before {
+            box-shadow: 0 0 8px 3px rgba(255, 255, 255, 0.6);
+            border-width: 3px;
+        }
+        
+        .dot.highlighted.has-content.ring-top::before {
+            box-shadow: 0 0 8px 3px rgba(255, 255, 255, 0.6);
+            border-width: 3px;
+        }
+
+        .highlight-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .highlight-section {
+            text-align: center;
+            background-color: #222;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .highlight-section h3 {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        
+        .highlight-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .highlight-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid #444;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .highlight-box:hover {
+            transform: scale(1.1);
+            border-color: #fff;
+        }
+        
+        .highlight-box.active {
+            border-color: #4CAF50;
+            box-shadow: 0 0 8px 2px rgba(76, 175, 80, 0.6);
+        }
+        
+        .highlight-box-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+        }
+        
+        .highlight-box-indicator.checkmark {
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .highlight-box-indicator.count {
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        /* Ring highlight boxes */
+        .ring-highlight-box {
+            background-color: #333;
+            color: #fff;
+        }
+        
+        .ring-highlight-box[data-ring="0"] {
+            background-color: #FF9800;
+        }
+        
+        .ring-highlight-box[data-ring="1"] {
+            background-color: #2196F3;
+        }
+        
+        .ring-highlight-box[data-ring="2"] {
+            background-color: #9C27B0;
+        }
+
+        /* Number highlight boxes */
+        .number-highlight-box {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .selected-coordinates {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .selected-coordinates h3 {
+            margin-bottom: 15px;
+        }
+        .coordinates-container {
+            background-color: #222;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .coordinates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            text-align: left;
+        }
+        .coordinate-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background-color: #333;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid #444;
+        }
+        .coordinate-item:hover {
+            background-color: #3a3a3a;
+            border-color: #555;
+        }
+        .coordinate-item.completed {
+            background-color: #1a4a1a;
+            border-color: #4CAF50;
+        }
+        .coordinate-item.completed .coordinate-text {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .coordinate-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #4CAF50;
+        }
+        .coordinate-number {
+            font-weight: bold;
+            color: #4CAF50;
+            min-width: 25px;
+            font-size: 12px;
+        }
+        .coordinate-text {
+            flex: 1;
+            font-size: 14px;
+            color: #ddd;
+        }
+        .coordinates-stats {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #ccc;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #444;
+            border-radius: 4px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        .coordinates-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .coordinates-actions button {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: #222;
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #222;
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .left-panel, .right-panel {
+                flex: none;
+                width: 100%;
+            }
+            .color-selector {
+                flex-direction: row;
+                justify-content: center;
+            }
+            .highlight-sections {
+                grid-template-columns: 1fr;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .input-group {
+                justify-content: space-between;
+            }
+            .dot {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+            }
+            .dot:hover::after {
+                top: -3px;
+                left: -3px;
+                right: -3px;
+                bottom: -3px;
+            }
+            .dot.has-content.ring-default::before,
+            .dot.has-content.ring-bottom::before,
+            .dot.has-content.ring-top::before {
+                top: -3px;
+                left: -3px;
+                right: -3px;
+                bottom: -3px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .coordinates-grid {
+                grid-template-columns: 1fr;
+            }
+            .number-selector {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Grid Titik Interaktif</h1>
+        <div class="controls">
+            <div class="input-group">
+                <label for="rows">Baris:</label>
+                <input type="number" id="rows" min="1" max="30" value="10">
+            </div>
+            <div class="input-group">
+                <label for="cols">Kolom:</label>
+                <input type="number" id="cols" min="1" max="30" value="10">
+            </div>
+            <button id="generateBtn">Buat Grid</button>
+            
+            <div class="input-group">
+                <label>Tinggi Paku:</label>
+                <div class="number-selector">
+                    <div class="number-btn" data-number="1">1</div>
+                    <div class="number-btn" data-number="2">2</div>
+                    <div class="number-btn" data-number="3">3</div>
+                    <div class="number-btn" data-number="4">4</div>
+                    <div class="number-btn" data-number="5">5</div>
+                    <div class="number-btn" data-number="6">6</div>
+                    <div class="number-btn" data-number="7">7</div>
+                    <div class="number-btn" data-number="8">8</div>
+                    <div class="number-btn" data-number="9">9</div>
+                    <div class="number-btn" data-number="10">10</div>
+                </div>
+            </div>
+            
+            <button id="highlightBtn" class="secondary">Highlight Animasi</button>
+            <button id="resetBtn" class="danger">Reset</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <h3>Panduan Cincin</h3>
+                <div class="ring-explanation">
+                    <p><strong>Ctrl + Klik</strong> untuk mengubah cincin:</p>
+                    <p><span class="ring-type">Kiri-Kanan:</span><br>Ukuran Badan Paku Sedang</p>
+                    <p><span class="ring-type">Bawah:</span><br>Ukuran Badan Paku Kecil</p>
+                    <p><span class="ring-type">Atas:</span><br>Ukuran Badan Paku Besar</p>
+                </div>
+            </div>
+            
+            <div class="grid-container">
+                <div id="dotGrid" class="dot-grid"></div>
+            </div>
+            
+            <div class="right-panel">
+                <h3>Ukuran Kepala Paku</h3>
+                <div class="color-selector">
+                    <div class="color-btn active" data-color="#F2F2F2" style="background-color: #F2F2F2;"></div>
+                    <div class="color-btn" data-color="#999999" style="background-color: #999999;"></div>
+                    <div class="color-btn" data-color="#1A1A1A" style="background-color: #1A1A1A;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="highlight-sections">
+            <div class="highlight-section">
+                <h3>Riwayat Warna</h3>
+                <div id="colorBoxes" class="highlight-boxes"></div>
+            </div>
+            
+            <div class="highlight-section">
+                <h3>Cincin Badan Paku</h3>
+                <div id="ringBoxes" class="highlight-boxes">
+                    <div class="highlight-box ring-highlight-box" data-ring="0" title="Sedang (Kiri-Kanan)">
+                        <span>Sedang</span>
+                        <div class="highlight-box-indicator"></div>
+                    </div>
+                    <div class="highlight-box ring-highlight-box" data-ring="1" title="Kecil (Bawah)">
+                        <span>Kecil</span>
+                        <div class="highlight-box-indicator"></div>
+                    </div>
+                    <div class="highlight-box ring-highlight-box" data-ring="2" title="Besar (Atas)">
+                        <span>Besar</span>
+                        <div class="highlight-box-indicator"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-section">
+                <h3>Tinggi Paku</h3>
+                <div id="numberBoxes" class="highlight-boxes"></div>
+            </div>
+        </div>
+        
+        <div class="selected-coordinates">
+            <h3 id="coordinatesTitle">Koordinat Titik Terpilih</h3>
+            <div class="coordinates-container">
+                <div id="coordinatesGrid" class="coordinates-grid"></div>
+                <div id="coordinatesStats" class="coordinates-stats" style="display: none;">
+                    <div>Total: <span id="totalCount">0</span> | Selesai: <span id="completedCount">0</span> | Sisa: <span id="remainingCount">0</span></div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="coordinates-actions">
+                    <button id="checkAllBtn" class="secondary">Centang Semua</button>
+                    <button id="uncheckAllBtn" class="secondary">Hapus Centang</button>
+                    <button id="clearCompletedBtn" class="danger">Hapus Selesai</button>
+                </div>
+            </div>
+        </div>
+        <div id="tooltip" class="tooltip"></div>
+    </div>
+
+    <script>
+        class InteractiveDotGrid {
+            constructor() {
+                this.dotData = [];
+                this.colorHistory = [];
+                this.numberHistory = [];
+                this.highlightedColor = null;
+                this.highlightedRing = null;
+                this.highlightedNumber = null;
+                this.animationInterval = null;
+                this.isAnimating = false;
+                this.currentAnimationIndex = 0;
+                this.savedColors = new Map();
+                this.savedNumbers = new Map();
+                this.ringPositions = new Map(); // Track ring positions: 0=default, 1=bottom, 2=top
+                this.coordinateStates = new Map();
+                this.colorCompletionStatus = new Map();
+                this.ringCompletionStatus = new Map();
+                this.numberCompletionStatus = new Map();
+                this.selectedColor = '#F2F2F2';
+                this.selectedNumber = null;
+                this.initElements();
+                this.bindEvents();
+                this.generateGrid();
+                this.updateNumberHistory();
+                this.updateRingStatus();
+            }
+
+            initElements() {
+                this.rowsInput = document.getElementById('rows');
+                this.colsInput = document.getElementById('cols');
+                this.generateBtn = document.getElementById('generateBtn');
+                this.colorBtns = document.querySelectorAll('.color-btn');
+                this.numberBtns = document.querySelectorAll('.number-btn');
+                this.highlightBtn = document.getElementById('highlightBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.dotGrid = document.getElementById('dotGrid');
+                this.colorBoxes = document.getElementById('colorBoxes');
+                this.ringBoxes = document.getElementById('ringBoxes');
+                this.numberBoxes = document.getElementById('numberBoxes');
+                this.tooltip = document.getElementById('tooltip');
+                this.coordinatesGrid = document.getElementById('coordinatesGrid');
+                this.coordinatesStats = document.getElementById('coordinatesStats');
+                this.coordinatesTitle = document.getElementById('coordinatesTitle');
+                this.totalCount = document.getElementById('totalCount');
+                this.completedCount = document.getElementById('completedCount');
+                this.remainingCount = document.getElementById('remainingCount');
+                this.progressFill = document.getElementById('progressFill');
+                this.checkAllBtn = document.getElementById('checkAllBtn');
+                this.uncheckAllBtn = document.getElementById('uncheckAllBtn');
+                this.clearCompletedBtn = document.getElementById('clearCompletedBtn');
+            }
+
+            bindEvents() {
+                this.generateBtn.addEventListener('click', () => this.generateGrid());
+                this.highlightBtn.addEventListener('click', () => this.toggleHighlightAnimation());
+                this.resetBtn.addEventListener('click', () => this.resetGrid());
+                this.checkAllBtn.addEventListener('click', () => this.checkAllCoordinates());
+                this.uncheckAllBtn.addEventListener('click', () => this.uncheckAllCoordinates());
+                this.clearCompletedBtn.addEventListener('click', () => this.clearCompletedCoordinates());
+
+                // Color button events
+                this.colorBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.colorBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.selectedColor = btn.dataset.color;
+                    });
+                });
+
+                // Number button events
+                this.numberBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (btn.classList.contains('active')) {
+                            btn.classList.remove('active');
+                            this.selectedNumber = null;
+                        } else {
+                            this.numberBtns.forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            this.selectedNumber = btn.dataset.number;
+                        }
+                    });
+                });
+
+                // Ring highlight events
+                this.ringBoxes.addEventListener('click', (e) => {
+                    const ringBox = e.target.closest('.ring-highlight-box');
+                    if (ringBox) {
+                        const ringType = parseInt(ringBox.dataset.ring);
+                        this.toggleRingHighlight(ringType);
+                    }
+                });
+
+                [this.rowsInput, this.colsInput].forEach(input => {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.generateGrid();
+                        }
+                    });
+                });
+            }
+
+            generateGrid() {
+                const rows = parseInt(this.rowsInput.value) || 10;
+                const cols = parseInt(this.colsInput.value) || 10;
+                this.dotGrid.innerHTML = '';
+                this.dotGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+                this.dotGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                this.dotData = [];
+
+                for (let row = 1; row <= rows; row++) {
+                    for (let col = 1; col <= cols; col++) {
+                        const dot = document.createElement('div');
+                        dot.className = 'dot';
+                        const key = `${row}-${col}`;
+                        
+                        // Restore saved state
+                        const savedColor = this.savedColors.get(key);
+                        const savedNumber = this.savedNumbers.get(key);
+                        const ringPos = this.ringPositions.get(key) || 0;
+                        
+                        if (savedColor) {
+                            dot.style.backgroundColor = savedColor;
+                        }
+                        if (savedNumber) {
+                            dot.textContent = savedNumber;
+                            this.setTextColor(dot, savedColor || '#555');
+                        }
+                        
+                        // Apply ring effects if dot has content
+                        if (savedColor || savedNumber) {
+                            dot.classList.add('has-content');
+                            this.updateRingPosition(dot, ringPos);
+                        }
+
+                        dot.addEventListener('click', (e) => this.handleDotClick(e, row, col));
+                        dot.addEventListener('mouseenter', (e) => this.handleDotMouseEnter(e, row, col));
+                        dot.addEventListener('mouseleave', () => this.handleDotMouseLeave());
+                        
+                        this.dotGrid.appendChild(dot);
+                        this.dotData.push({ el: dot, row, col });
+                    }
+                }
+                this.clearHighlight();
+            }
+
+            handleDotClick(event, row, col) {
+                const dot = event.target;
+                const key = `${row}-${col}`;
+                
+                if (event.ctrlKey) {
+                    // Handle ring position cycling
+                    if (dot.classList.contains('has-content')) {
+                        const currentPos = this.ringPositions.get(key) || 0;
+                        const newPos = (currentPos + 1) % 3;
+                        this.ringPositions.set(key, newPos);
+                        this.updateRingPosition(dot, newPos);
+                        this.updateRingStatus();
+                    }
+                } else {
+                    // Handle color/number application
+                    let hasContent = false;
+                    let appliedColor = null;
+                    
+                    if (this.selectedColor) {
+                        dot.style.backgroundColor = this.selectedColor;
+                        this.savedColors.set(key, this.selectedColor);
+                        appliedColor = this.selectedColor;
+                        hasContent = true;
+                        
+                        // Auto-set number 1 when color is applied (only if no number is selected)
+                        if (!this.selectedNumber) {
+                            dot.textContent = '1';
+                            this.savedNumbers.set(key, '1');
+                        }
+                        
+                        if (!this.colorHistory.includes(this.selectedColor)) {
+                            this.colorHistory.push(this.selectedColor);
+                            this.updateColorHistory();
+                        }
+                    }
+                    
+                    if (this.selectedNumber) {
+                        dot.textContent = this.selectedNumber;
+                        this.savedNumbers.set(key, this.selectedNumber);
+                        hasContent = true;
+                        
+                        if (!this.numberHistory.includes(this.selectedNumber)) {
+                            this.numberHistory.push(this.selectedNumber);
+                            this.updateNumberHistory();
+                        }
+                        
+                        // Use existing color or default
+                        appliedColor = this.savedColors.get(key) || dot.style.backgroundColor || '#555';
+                    }
+                    
+                    // Set text color based on background
+                    if (hasContent && dot.textContent) {
+                        this.setTextColor(dot, appliedColor);
+                    }
+                    
+                    // Add ring effects for new content
+                    if (hasContent) {
+                        dot.classList.add('has-content');
+                        if (!this.ringPositions.has(key)) {
+                            this.ringPositions.set(key, 0); // Default position
+                        }
+                        this.updateRingPosition(dot, this.ringPositions.get(key));
+                    }
+                    
+                    this.updateColorCompletionStatus();
+                    this.updateNumberCompletionStatus();
+                    this.updateRingStatus();
+                }
+            }
+
+            setTextColor(dot, backgroundColor) {
+                const bgColor = this.normalizeColor(backgroundColor);
+                
+                if (bgColor === '#999999') {
+                    dot.style.color = '#ffffff';
+                } else {
+                    const isLight = this.isLightColor(bgColor);
+                    dot.style.color = isLight ? '#000000' : '#ffffff';
+                }
+            }
+
+            normalizeColor(color) {
+                if (color.startsWith('#')) {
+                    return color.toUpperCase();
+                }
+                
+                if (color.startsWith('rgb')) {
+                    return this.rgbToHex(color);
+                }
+                
+                return '#555555';
+            }
+
+            isLightColor(hexColor) {
+                const hex = hexColor.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16);
+                const g = parseInt(hex.substr(2, 2), 16);
+                const b = parseInt(hex.substr(4, 2), 16);
+                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                return luminance > 0.5;
+            }
+
+            updateRingPosition(dot, position) {
+                dot.classList.remove('ring-default', 'ring-bottom', 'ring-top');
+                
+                switch (position) {
+                    case 0:
+                        dot.classList.add('ring-default');
+                        break;
+                    case 1:
+                        dot.classList.add('ring-bottom');
+                        break;
+                    case 2:
+                        dot.classList.add('ring-top');
+                        break;
+                }
+            }
+
+            handleDotMouseEnter(event, row, col) {
+                if (this.highlightedColor || this.highlightedRing !== null || this.highlightedNumber) {
+                    const dot = event.target;
+                    const dotColor = this.normalizeColor(dot.style.backgroundColor || '#555');
+                    const dotNumber = dot.textContent;
+                    const key = `${row}-${col}`;
+                    const dotRing = this.ringPositions.get(key) || 0;
+                    
+                    let shouldShowTooltip = false;
+                    
+                    if (this.highlightedColor && dotColor === this.normalizeColor(this.highlightedColor)) {
+                        shouldShowTooltip = true;
+                    }
+                    if (this.highlightedRing !== null && dotRing === this.highlightedRing) {
+                        shouldShowTooltip = true;
+                    }
+                    if (this.highlightedNumber && dotNumber === this.highlightedNumber) {
+                        shouldShowTooltip = true;
+                    }
+                    
+                    if (shouldShowTooltip) {
+                        const rect = dot.getBoundingClientRect();
+                        this.tooltip.textContent = `{${row}, ${col}}`;
+                        this.tooltip.style.display = 'block';
+                        this.tooltip.style.left = rect.right + 10 + 'px';
+                        this.tooltip.style.top = rect.top + 'px';
+                        if (rect.right + 10 + this.tooltip.offsetWidth > window.innerWidth) {
+                            this.tooltip.style.left = rect.left - this.tooltip.offsetWidth - 10 + 'px';
+                        }
+                    }
+                }
+            }
+
+            handleDotMouseLeave() {
+                this.tooltip.style.display = 'none';
+            }
+
+            updateColorHistory() {
+                this.colorBoxes.innerHTML = '';
+                this.colorHistory.forEach(color => {
+                    const colorBox = document.createElement('div');
+                    colorBox.className = 'highlight-box';
+                    colorBox.style.backgroundColor = color;
+                    
+                    const indicator = document.createElement('div');
+                    indicator.className = 'highlight-box-indicator';
+                    
+                    colorBox.appendChild(indicator);
+                    colorBox.addEventListener('click', () => this.toggleColorHighlight(color));
+                    this.colorBoxes.appendChild(colorBox);
+                });
+                this.updateColorCompletionStatus();
+            }
+
+            updateNumberHistory() {
+                this.numberBoxes.innerHTML = '';
+                // Show all numbers 1-10
+                for (let i = 1; i <= 10; i++) {
+                    const numberBox = document.createElement('div');
+                    numberBox.className = 'highlight-box number-highlight-box';
+                    numberBox.textContent = i.toString();
+                    numberBox.dataset.number = i.toString();
+                    
+                    const indicator = document.createElement('div');
+                    indicator.className = 'highlight-box-indicator';
+                    
+                    numberBox.appendChild(indicator);
+                    numberBox.addEventListener('click', () => this.toggleNumberHighlight(i.toString()));
+                    this.numberBoxes.appendChild(numberBox);
+                }
+                this.updateNumberCompletionStatus();
+            }
+
+            updateRingStatus() {
+                // Update ring completion status
+                [0, 1, 2].forEach(ringType => {
+                    const coordinates = this.getCoordinatesForRing(ringType);
+                    const completedCount = coordinates.filter(coord => {
+                        const coordKey = `${coord.row}-${coord.col}`;
+                        return this.coordinateStates.get(coordKey) || false;
+                    }).length;
+                    
+                    const remaining = coordinates.length - completedCount;
+                    const isComplete = remaining === 0 && coordinates.length > 0;
+                    
+                    this.ringCompletionStatus.set(ringType, {
+                        total: coordinates.length,
+                        completed: completedCount,
+                        remaining: remaining,
+                        isComplete: isComplete
+                    });
+                });
+
+                // Update visual indicators in ring boxes
+                Array.from(this.ringBoxes.children).forEach(ringBox => {
+                    const ringType = parseInt(ringBox.dataset.ring);
+                    const status = this.ringCompletionStatus.get(ringType);
+                    const indicator = ringBox.querySelector('.highlight-box-indicator');
+                    
+                    if (status && status.total > 0) {
+                        if (status.isComplete) {
+                            indicator.textContent = '✓';
+                            indicator.className = 'highlight-box-indicator checkmark';
+                        } else {
+                            indicator.textContent = status.remaining.toString();
+                            indicator.className = 'highlight-box-indicator count';
+                        }
+                    } else {
+                        indicator.textContent = '';
+                        indicator.className = 'highlight-box-indicator';
+                    }
+                });
+            }
+
+            updateColorCompletionStatus() {
+                this.colorHistory.forEach(color => {
+                    const coordinates = this.getCoordinatesForColor(color);
+                    const completedCount = coordinates.filter(coord => {
+                        const coordKey = `${coord.row}-${coord.col}`;
+                        return this.coordinateStates.get(coordKey) || false;
+                    }).length;
+                    
+                    const remaining = coordinates.length - completedCount;
+                    const isComplete = remaining === 0 && coordinates.length > 0;
+                    
+                    this.colorCompletionStatus.set(color, {
+                        total: coordinates.length,
+                        completed: completedCount,
+                        remaining: remaining,
+                        isComplete: isComplete
+                    });
+                });
+
+                // Update visual indicators in color boxes
+                Array.from(this.colorBoxes.children).forEach(colorBox => {
+                    const color = this.normalizeColor(colorBox.style.backgroundColor);
+                    const status = this.colorCompletionStatus.get(color);
+                    const indicator = colorBox.querySelector('.highlight-box-indicator');
+                    
+                    if (status && status.total > 0) {
+                        if (status.isComplete) {
+                            indicator.textContent = '✓';
+                            indicator.className = 'highlight-box-indicator checkmark';
+                        } else {
+                            indicator.textContent = status.remaining.toString();
+                            indicator.className = 'highlight-box-indicator count';
+                        }
+                    } else {
+                        indicator.textContent = '';
+                        indicator.className = 'highlight-box-indicator';
+                    }
+                });
+            }
+
+            updateNumberCompletionStatus() {
+                for (let i = 1; i <= 10; i++) {
+                    const number = i.toString();
+                    const coordinates = this.getCoordinatesForNumber(number);
+                    const completedCount = coordinates.filter(coord => {
+                        const coordKey = `${coord.row}-${coord.col}`;
+                        return this.coordinateStates.get(coordKey) || false;
+                    }).length;
+                    
+                    const remaining = coordinates.length - completedCount;
+                    const isComplete = remaining === 0 && coordinates.length > 0;
+                    
+                    this.numberCompletionStatus.set(number, {
+                        total: coordinates.length,
+                        completed: completedCount,
+                        remaining: remaining,
+                        isComplete: isComplete
+                    });
+                }
+
+                // Update visual indicators in number boxes
+                Array.from(this.numberBoxes.children).forEach(numberBox => {
+                    const number = numberBox.dataset.number;
+                    const status = this.numberCompletionStatus.get(number);
+                    const indicator = numberBox.querySelector('.highlight-box-indicator');
+                    
+                    if (status && status.total > 0) {
+                        if (status.isComplete) {
+                            indicator.textContent = '✓';
+                            indicator.className = 'highlight-box-indicator checkmark';
+                        } else {
+                            indicator.textContent = status.remaining.toString();
+                            indicator.className = 'highlight-box-indicator count';
+                        }
+                    } else {
+                        indicator.textContent = '';
+                        indicator.className = 'highlight-box-indicator';
+                    }
+                });
+            }
+
+            getCoordinatesForColor(color) {
+                const coordinates = [];
+                const normalizedColor = this.normalizeColor(color);
+                
+                this.dotData.forEach(({ el, row, col }) => {
+                    const dotColor = this.normalizeColor(el.style.backgroundColor || '#555');
+                    if (dotColor === normalizedColor) {
+                        coordinates.push({ row, col });
+                    }
+                });
+                return coordinates;
+            }
+
+            getCoordinatesForRing(ringType) {
+                const coordinates = [];
+                
+                this.dotData.forEach(({ el, row, col }) => {
+                    const key = `${row}-${col}`;
+                    const dotRing = this.ringPositions.get(key);
+                    if (dotRing === ringType && el.classList.contains('has-content')) {
+                        coordinates.push({ row, col });
+                    }
+                });
+                return coordinates;
+            }
+
+            getCoordinatesForNumber(number) {
+                const coordinates = [];
+                
+                this.dotData.forEach(({ el, row, col }) => {
+                    if (el.textContent === number) {
+                        coordinates.push({ row, col });
+                    }
+                });
+                return coordinates;
+            }
+
+            toggleColorHighlight(color) {
+                if (this.isAnimating) {
+                    this.stopHighlightAnimation();
+                }
+                const normalizedColor = this.normalizeColor(color);
+                if (this.highlightedColor === normalizedColor) {
+                    this.clearHighlight();
+                } else {
+                    this.highlightColor(normalizedColor);
+                }
+            }
+
+            toggleRingHighlight(ringType) {
+                if (this.isAnimating) {
+                    this.stopHighlightAnimation();
+                }
+                if (this.highlightedRing === ringType) {
+                    this.clearHighlight();
+                } else {
+                    this.highlightRing(ringType);
+                }
+            }
+
+            toggleNumberHighlight(number) {
+                if (this.isAnimating) {
+                    this.stopHighlightAnimation();
+                }
+                if (this.highlightedNumber === number) {
+                    this.clearHighlight();
+                } else {
+                    this.highlightNumber(number);
+                }
+            }
+
+            highlightColor(color) {
+                this.clearHighlight();
+                this.highlightedColor = color;
+                const normalizedColor = this.normalizeColor(color);
+                
+                Array.from(this.colorBoxes.children).forEach(box => {
+                    const boxColor = this.normalizeColor(box.style.backgroundColor);
+                    box.classList.toggle('active', boxColor === normalizedColor);
+                });
+
+                this.dotData.forEach(({ el }) => {
+                    const dotColor = this.normalizeColor(el.style.backgroundColor || '#555');
+                    el.classList.toggle('highlighted', dotColor === normalizedColor);
+                    el.classList.toggle('dimmed', dotColor !== normalizedColor);
+                });
+
+                this.updateSelectedCoordinates(this.getCoordinatesForColor(normalizedColor), `Koordinat Warna ${normalizedColor}`);
+            }
+
+            highlightRing(ringType) {
+                this.clearHighlight();
+                this.highlightedRing = ringType;
+                
+                Array.from(this.ringBoxes.children).forEach(box => {
+                    const boxRing = parseInt(box.dataset.ring);
+                    box.classList.toggle('active', boxRing === ringType);
+                });
+
+                this.dotData.forEach(({ el, row, col }) => {
+                    const key = `${row}-${col}`;
+                    const dotRing = this.ringPositions.get(key);
+                    const hasContent = el.classList.contains('has-content');
+                    el.classList.toggle('highlighted', dotRing === ringType && hasContent);
+                    el.classList.toggle('dimmed', !(dotRing === ringType && hasContent));
+                });
+
+                const ringNames = ['Sedang (Kiri-Kanan)', 'Kecil (Bawah)', 'Besar (Atas)'];
+                this.updateSelectedCoordinates(this.getCoordinatesForRing(ringType), `Koordinat Cincin ${ringNames[ringType]}`);
+            }
+
+            highlightNumber(number) {
+                this.clearHighlight();
+                this.highlightedNumber = number;
+                
+                Array.from(this.numberBoxes.children).forEach(box => {
+                    const boxNumber = box.dataset.number;
+                    box.classList.toggle('active', boxNumber === number);
+                });
+
+                this.dotData.forEach(({ el }) => {
+                    el.classList.toggle('highlighted', el.textContent === number);
+                    el.classList.toggle('dimmed', el.textContent !== number);
+                });
+
+                this.updateSelectedCoordinates(this.getCoordinatesForNumber(number), `Koordinat Tinggi Paku ${number}`);
+            }
+
+            updateSelectedCoordinates(coordinates, title) {
+                this.coordinatesTitle.textContent = title;
+                this.coordinatesGrid.innerHTML = '';
+                coordinates.sort((a, b) => {
+                    if (a.row !== b.row) return a.row - b.row;
+                    return a.col - b.col;
+                });
+
+                coordinates.forEach((coord, index) => {
+                    const coordKey = `${coord.row}-${coord.col}`;
+                    const item = document.createElement('div');
+                    item.className = 'coordinate-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'coordinate-checkbox';
+                    checkbox.checked = this.coordinateStates.get(coordKey) || false;
+                    checkbox.addEventListener('change', () => {
+                        this.coordinateStates.set(coordKey, checkbox.checked);
+                        item.classList.toggle('completed', checkbox.checked);
+                        this.updateStats();
+                        this.updateColorCompletionStatus();
+                        this.updateNumberCompletionStatus();
+                        this.updateRingStatus();
+                    });
+
+                    const number = document.createElement('span');
+                    number.className = 'coordinate-number';
+                    number.textContent = `#${index + 1}`;
+
+                    const text = document.createElement('span');
+                    text.className = 'coordinate-text';
+                    text.textContent = `{${coord.row}, ${coord.col}}`;
+
+                    if (checkbox.checked) {
+                        item.classList.add('completed');
+                    }
+
+                    item.appendChild(checkbox);
+                    item.appendChild(number);
+                    item.appendChild(text);
+                    this.coordinatesGrid.appendChild(item);
+                });
+
+                if (coordinates.length > 0) {
+                    this.coordinatesStats.style.display = 'block';
+                    this.updateStats();
+                } else {
+                    this.coordinatesStats.style.display = 'none';
+                }
+            }
+
+            updateStats() {
+                const checkboxes = this.coordinatesGrid.querySelectorAll('.coordinate-checkbox');
+                const total = checkboxes.length;
+                const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+                const remaining = total - completed;
+                const percentage = total > 0 ? (completed / total) * 100 : 0;
+
+                this.totalCount.textContent = total;
+                this.completedCount.textContent = completed;
+                this.remainingCount.textContent = remaining;
+                this.progressFill.style.width = `${percentage}%`;
+            }
+
+            checkAllCoordinates() {
+                const checkboxes = this.coordinatesGrid.querySelectorAll('.coordinate-checkbox');
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.checked) {
+                        checkbox.checked = true;
+                        checkbox.dispatchEvent(new Event('change'));
+                    }
+                });
+            }
+
+            uncheckAllCoordinates() {
+                const checkboxes = this.coordinatesGrid.querySelectorAll('.coordinate-checkbox');
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        checkbox.checked = false;
+                        checkbox.dispatchEvent(new Event('change'));
+                    }
+                });
+            }
+
+            clearCompletedCoordinates() {
+                const completedItems = this.coordinatesGrid.querySelectorAll('.coordinate-item.completed');
+                completedItems.forEach(item => {
+                    const checkbox = item.querySelector('.coordinate-checkbox');
+                    const text = item.querySelector('.coordinate-text').textContent;
+                    const match = text.match(/\{(\d+), (\d+)\}/);
+                    if (match) {
+                        const coordKey = `${match[1]}-${match[2]}`;
+                        this.coordinateStates.delete(coordKey);
+                    }
+                });
+                
+                if (this.highlightedColor) {
+                    this.updateSelectedCoordinates(this.getCoordinatesForColor(this.highlightedColor), `Koordinat Warna ${this.highlightedColor}`);
+                } else if (this.highlightedRing !== null) {
+                    const ringNames = ['Sedang (Kiri-Kanan)', 'Kecil (Bawah)', 'Besar (Atas)'];
+                    this.updateSelectedCoordinates(this.getCoordinatesForRing(this.highlightedRing), `Koordinat Cincin ${ringNames[this.highlightedRing]}`);
+                } else if (this.highlightedNumber) {
+                    this.updateSelectedCoordinates(this.getCoordinatesForNumber(this.highlightedNumber), `Koordinat Tinggi Paku ${this.highlightedNumber}`);
+                }
+                
+                this.updateColorCompletionStatus();
+                this.updateNumberCompletionStatus();
+                this.updateRingStatus();
+            }
+
+            clearHighlight() {
+                this.highlightedColor = null;
+                this.highlightedRing = null;
+                this.highlightedNumber = null;
+                this.dotData.forEach(({ el }) => {
+                    el.classList.remove('highlighted', 'dimmed');
+                });
+                Array.from(this.colorBoxes.children).forEach(box => box.classList.remove('active'));
+                Array.from(this.ringBoxes.children).forEach(box => box.classList.remove('active'));
+                Array.from(this.numberBoxes.children).forEach(box => box.classList.remove('active'));
+                this.tooltip.style.display = 'none';
+                this.coordinatesGrid.innerHTML = '';
+                this.coordinatesStats.style.display = 'none';
+                this.coordinatesTitle.textContent = 'Koordinat Titik Terpilih';
+            }
+
+            toggleHighlightAnimation() {
+                if (this.isAnimating) {
+                    this.stopHighlightAnimation();
+                } else {
+                    this.startHighlightAnimation();
+                }
+            }
+
+            startHighlightAnimation() {
+                if (this.colorHistory.length === 0) return;
+                this.isAnimating = true;
+                this.highlightBtn.textContent = 'Stop Highlight';
+                this.currentAnimationIndex = 0;
+
+                const animate = () => {
+                    if (!this.isAnimating) return;
+                    const color = this.colorHistory[this.currentAnimationIndex];
+                    this.highlightColor(color);
+                    this.currentAnimationIndex = (this.currentAnimationIndex + 1) % this.colorHistory.length;
+                };
+
+                animate();
+                this.animationInterval = setInterval(animate, 1000);
+            }
+
+            stopHighlightAnimation() {
+                this.isAnimating = false;
+                this.highlightBtn.textContent = 'Highlight Animasi';
+                if (this.animationInterval) {
+                    clearInterval(this.animationInterval);
+                    this.animationInterval = null;
+                }
+                this.clearHighlight();
+            }
+
+            resetGrid() {
+                this.stopHighlightAnimation();
+                this.clearHighlight();
+                this.colorHistory = [];
+                this.numberHistory = [];
+                this.savedColors.clear();
+                this.savedNumbers.clear();
+                this.ringPositions.clear();
+                this.coordinateStates.clear();
+                this.colorCompletionStatus.clear();
+                this.ringCompletionStatus.clear();
+                this.numberCompletionStatus.clear();
+                this.updateColorHistory();
+                this.updateNumberHistory();
+                this.updateRingStatus();
+                this.dotData.forEach(({ el }) => {
+                    el.style.backgroundColor = '#555';
+                    el.style.color = '#333';
+                    el.textContent = '';
+                    el.classList.remove('has-content', 'ring-default', 'ring-bottom', 'ring-top');
+                });
+            }
+
+            rgbToHex(rgb) {
+                if (rgb.startsWith('#')) return rgb.toUpperCase();
+                const result = rgb.match(/\d+/g);
+                if (!result) return '#555555';
+                const r = parseInt(result[0]), g = parseInt(result[1]), b = parseInt(result[2]);
+                return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+            }
+        }
+
+        window.onload = () => {
+            new InteractiveDotGrid();
+        };
+    </script>
+</body>
+</html>
