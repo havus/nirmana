@@ -497,14 +497,16 @@ class NirmanaScene {
       // HEIGHT CONVERSION
       // ============================
       // Convert height from mm to cm and use as Y-axis scale
-      const nailHeight = (nailData.height || 10) / 10;
+      // Apply 1.2x visual multiplier to emphasize height differences in 3D
+      const nailHeight = ((nailData.height || 10) / 10) * 1.2;
 
       // ============================
       // WIDTH CONVERSION
       // ============================
       // body_width and head_width are multipliers (1, 2, or 3)
-      const bodyWidthMultiplier = nailData.body_width || 1;
-      const headWidthMultiplier = nailData.head_width || 1;
+      // Apply 2.5x visual multipliers to emphasize dimension differences in 3D
+      const bodyWidthMultiplier = (nailData.body_width || 1) * 2.5;
+      const headWidthMultiplier = (nailData.head_width || 1) * 2.5;
 
       // Calculate actual dimensions
       const bodyWidth = this.settings.nailRadius * bodyWidthMultiplier;
@@ -545,11 +547,10 @@ class NirmanaScene {
 
       // Same process for nail head (the flat top part)
       // Head is wider (headWidth) but fixed height (0.2)
-      // Position calculation to remove gap:
+      // Position head center at the top of the nail body for seamless connection
       // - Nail body top is at: nailHeight (full height from base)
-      // - Head height is: 0.2
-      // - Head center should be at: nailHeight (touching the top of body)
-      // - No gap: Position head exactly at nailHeight (was nailHeight + 0.1 before)
+      // - Head height is: 0.2 (0.1 above and below center)
+      // - Head center at: nailHeight creates slight overlap for seamless appearance
       headMatrix.makeScale(headWidth, 0.2, headWidth);
       headMatrix.setPosition(posX, nailHeight, posZ);
       this.nailHeadInstancedMesh.setMatrixAt(index, headMatrix);

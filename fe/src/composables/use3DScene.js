@@ -385,11 +385,13 @@ export function use3DScene(canvasContainer) {
       const posZ = (y - (gridHeight - 1) / 2) * marginBetweenNails
 
       // Get nail height (convert mm to cm)
-      const nailHeight = (nailData.height || 10) / 10
+      // Apply 1.2x visual multiplier to emphasize height differences in 3D
+      const nailHeight = ((nailData.height || 10) / 10) * 1.2
 
       // Get nail dimensions - these are likely thickness multipliers, not absolute measurements
-      const bodyWidthMultiplier = nailData.body_width || 1
-      const headWidthMultiplier = nailData.head_width || 1
+      // Apply 2.5x visual multipliers to emphasize dimension differences in 3D
+      const bodyWidthMultiplier = (nailData.body_width || 1) * 2.5
+      const headWidthMultiplier = (nailData.head_width || 1) * 2.5
 
       // Calculate actual dimensions based on default nail radius and multipliers
       const bodyWidth = settings.value.nailRadius * bodyWidthMultiplier
@@ -401,8 +403,9 @@ export function use3DScene(canvasContainer) {
       nailInstancedMesh.setMatrixAt(index, matrix)
 
       // Set nail head transform
+      // Position head center at the top of the nail body for seamless connection
       headMatrix.makeScale(headWidth, 0.2, headWidth)
-      headMatrix.setPosition(posX, nailHeight + 0.1, posZ)
+      headMatrix.setPosition(posX, nailHeight, posZ)
       nailHeadInstancedMesh.setMatrixAt(index, headMatrix)
 
       index++
