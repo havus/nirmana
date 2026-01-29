@@ -61,26 +61,45 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
       </button>
+      
+      <!-- Pan Mode Toggle -->
+      <button 
+        @click="togglePanMode()"
+        :class="[
+          'p-2 rounded-full shadow-lg backdrop-blur transition-colors',
+          isPanModeActive
+            ? 'bg-indigo-500 hover:bg-indigo-600 text-white'
+            : 'bg-white/80 dark:bg-slate-800/80 hover:bg-white/90 dark:hover:bg-slate-800/90'
+        ]"
+        :title="isPanModeActive ? 'Pan Mode Active (Space to toggle)' : 'Enable Pan Mode (Space to toggle)'"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+        </svg>
+      </button>
     </div>
     
     <!-- Zoom Info & Reset View -->
     <div class="fixed top-15 left-5 z-10 flex flex-col items-start gap-2">
-      <div class="bg-white/80 dark:bg-slate-800/80 px-3 py-2 rounded-lg shadow-lg backdrop-blur text-sm">
-        Zoom: {{ zoomPercentage }}%
+      <div class="flex items-center gap-2">
+        <div class="bg-white/80 dark:bg-slate-800/80 px-3 py-2 rounded-lg shadow-lg backdrop-blur text-sm">
+          Zoom: {{ zoomPercentage }}%
+        </div>
+        <button 
+          @click="resetView()"
+          class="px-3 py-2 bg-white/80 dark:bg-slate-800/80 rounded-lg shadow-lg backdrop-blur hover:bg-white/90 dark:hover:bg-slate-800/90 transition-colors flex items-center gap-1 text-sm"
+          title="Reset View"
+        >
+          <span>Reset View</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
       </div>
       <div class="bg-white/80 dark:bg-slate-800/80 px-3 py-2 rounded-lg shadow-lg backdrop-blur text-xs text-gray-600 dark:text-gray-300 max-w-48 text-right">
         <div><kbd class="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">Ctrl</kbd> + scroll to zoom</div>
-        <div>Drag background to pan</div>
+        <div><kbd class="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">Space</kbd> + drag to pan</div>
       </div>
-      <button 
-        @click="resetView()"
-        class="p-2 bg-white/80 dark:bg-slate-800/80 rounded-lg shadow-lg backdrop-blur hover:bg-white/90 dark:hover:bg-slate-800/90 transition-colors"
-        title="Reset View"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-      </button>
     </div>
 
     <!-- Loading Overlay -->
@@ -98,7 +117,7 @@
         id="grid-container"
         class="transition-transform duration-200 ease-out cursor-pointer select-none"
         style="transform-origin: center center;"
-        title="Click dots to place nails. Hold Ctrl/Cmd + scroll to zoom, drag background to pan"
+        title="Click dots to place nails. Hold Ctrl/Cmd + scroll over the grid to zoom, drag background to pan"
       ></div>
     </div>
 
@@ -108,10 +127,10 @@
       :y="panelPosition.y"
       :w="panelSize.width"
       :h="panelSize.height"
-      :min-width="280"
-      :min-height="200"
-      :max-width="600"
-      :max-height="800"
+      :min-width="PANEL_DEFAULTS.MIN_WIDTH"
+      :min-height="PANEL_DEFAULTS.MIN_HEIGHT"
+      :max-width="PANEL_DEFAULTS.MAX_WIDTH"
+      :max-height="PANEL_DEFAULTS.MAX_HEIGHT"
       :resizable="true"
       :draggable="true"
       :parent="false"
@@ -143,323 +162,325 @@
           </div>
         </div>
 
-      <!-- Tab Navigation -->
-      <div v-if="!isMinimized" class="flex border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <button
-          v-for="tab in tabs"
-          :key="tab.id"
-          @click="activeTab = tab.id"
-          :class="[
-            'flex-1 px-3 py-2 text-sm font-medium transition-colors',
-            activeTab === tab.id
-              ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-          ]"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
+        <!-- Tab Navigation -->
+        <div v-if="!isMinimized" class="flex border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            :class="[
+              'flex-1 px-3 py-2 text-sm font-medium transition-colors',
+              activeTab === tab.id
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            ]"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
 
-      <!-- Tab Content (Scrollable) -->
-      <div v-if="!isMinimized" class="p-4 overflow-y-auto flex-1">
-        <!-- Board Tab -->
-        <div v-if="activeTab === 'board'" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Dots Count Horizontal
-            </label>
-            <input
-              v-model.number="boardSettings.dotsCountHorizontal"
-              type="number"
-              min="5"
-              max="50"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Dots Count Vertical
-            </label>
-            <input
-              v-model.number="boardSettings.dotsCountVertical"
-              type="number"
-              min="5"
-              max="50"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Margin Between Nails (px)
-            </label>
-            <input
-              v-model.number="boardSettings.marginBetweenNails"
-              type="number"
-              min="10"
-              max="100"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Padding Board (px)
-            </label>
-            <input
-              v-model.number="boardSettings.paddingBoard"
-              type="number"
-              min="10"
-              max="100"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          
-          <!-- Board Color Section -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Board Color
-            </label>
-            <div class="flex flex-wrap gap-3">
-              <div
-                v-for="colorOption in boardColorOptions"
-                :key="colorOption.id"
-                @click="selectBoardColor(colorOption)"
-                :class="[
-                  'relative cursor-pointer transition-all',
-                  selectedBoardColor === colorOption.id
-                    ? 'ring-2 ring-indigo-600 ring-offset-2'
-                    : 'hover:ring-2 hover:ring-gray-400 hover:ring-offset-1'
-                ]"
-                :title="colorOption.label"
-              >
-                <div
-                  :style="{ backgroundColor: colorOption.id === 'custom' ? customBoardColor : colorOption.color }"
-                  class="w-10 h-10 rounded-full border-2 border-white shadow-md relative"
-                >
-                  <!-- Pencil icon for custom color -->
-                  <svg v-if="colorOption.id === 'custom'" class="w-4 h-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white drop-shadow" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
-                </div>
-                
-                <!-- Selected indicator -->
-                <div v-if="selectedBoardColor === colorOption.id" class="absolute -top-1 -right-1 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
-                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Custom Color Picker -->
-            <div v-if="selectedBoardColor === 'custom'" class="mt-3">
+        <!-- Tab Content (Scrollable) -->
+        <div v-if="!isMinimized" class="p-4 overflow-y-auto flex-1">
+          <!-- Project Tab -->
+          <div v-if="activeTab === 'project'" class="space-y-4">
+            <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Custom Color
+                Project Name
               </label>
               <input
-                v-model="customBoardColor"
-                type="color"
-                class="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
+                v-model="projectName"
+                type="text"
+                placeholder="Enter project name"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-          </div>
-        </div>
 
-        <!-- Nails Tab -->
-        <div v-if="activeTab === 'nails'" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Nail Body Width
-            </label>
             <div class="flex gap-2">
               <button
-                v-for="bodyOption in nailBodyOptions"
-                :key="bodyOption.id"
-                @click="selectedNailWidth = bodyOption.id"
-                :class="[
-                  'w-12 h-12 rounded-lg border-2 transition-all flex items-center justify-center font-bold text-white shadow-md',
-                  selectedNailWidth === bodyOption.id
-                    ? 'border-indigo-500 ring-2 ring-indigo-300 scale-110'
-                    : 'border-gray-300 dark:border-gray-600 hover:scale-105 hover:border-gray-400'
-                ]"
-                :style="{ backgroundColor: bodyOption.color }"
-                :title="bodyOption.label"
+                @click="() => {$emit('save-project'); testo()}"
+                :disabled="isSaving"
+                class="hover:cursor-pointer flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
               >
-                {{ bodyOption.size }}
-              </button>
-            </div>
-          </div>
-          
-          <!-- Nail Head Width Section -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Nail Head Width
-            </label>
-            <div class="flex gap-2">
-              <button
-                v-for="headOption in nailHeadOptions"
-                :key="headOption.id"
-                @click="selectedNailHead = headOption.id"
-                :class="[
-                  'w-12 h-12 rounded-lg border-2 transition-all flex items-center justify-center font-bold text-white shadow-md relative',
-                  selectedNailHead === headOption.id
-                    ? 'border-indigo-500 ring-2 ring-indigo-300 scale-110'
-                    : 'border-gray-300 dark:border-gray-600 hover:scale-105 hover:border-gray-400'
-                ]"
-                :style="{ backgroundColor: headOption.color }"
-                :title="headOption.label"
-              >
-                <!-- Inner circle with border percentage as arc -->
-                <svg class="absolute w-full h-full" viewBox="0 0 24 24">
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="8"
-                    fill="none"
-                    stroke="white"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    :stroke-dasharray="`${(headOption.borderPercentage / 100) * 50.27} 50.27`"
-                    transform="rotate(-90 12 12)"
-                  />
+                <svg v-if="isSaving" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="relative z-10">{{ headOption.size }}</span>
+                {{ mode === 'edit' ? 'Update Project' : 'Save Project' }}
               </button>
             </div>
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Nail Height (mm)
-            </label>
-            <div class="grid grid-cols-4 gap-2">
-              <button
-                v-for="height in nailHeightOptions"
-                :key="height"
-                @click="selectedNailHeight = height"
-                :class="[
-                  'p-2 text-sm font-medium rounded-md border transition-colors',
-                  selectedNailHeight === height
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-600'
-                ]"
-              >
-                {{ height }}
-              </button>
+
+            <!-- Project Info (for edit mode) -->
+            <div v-if="mode === 'edit' && projectInfo" class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Info</h4>
+              <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                <p><strong>ID:</strong> {{ projectInfo.id }}</p>
+                <p><strong>Owner:</strong> {{ projectInfo.owner?.full_name }}</p>
+                <p><strong>Created:</strong> {{ formatDate(projectInfo.created_at) }}</p>
+                <p><strong>Modified:</strong> {{ formatDate(projectInfo.updated_at) }}</p>
+              </div>
+            </div>
+
+            <!-- Nails Statistics -->
+            <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Statistics</h4>
+              <div class="text-sm text-gray-600 dark:text-gray-400">
+                <p>Total Nails: {{ Object.keys(nails).length }}</p>
+                <p>Grid Size: {{ boardSettings.dotsCountHorizontal }}×{{ boardSettings.dotsCountVertical }}</p>
+              </div>
             </div>
           </div>
 
-          <div class="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
-            <p class="font-medium text-blue-700 dark:text-blue-300 mb-1">💡 How to use:</p>
-            <ul class="space-y-1 text-blue-600 dark:text-blue-400">
-              <li>• Click any position to place a nail</li>
-              <li>• Click again with same settings to remove</li>
-              <li>• Right-click to remove any nail</li>
-            </ul>
-          </div>
-
-          <div class="flex gap-2">
-            <button
-              @click="clearAllNails()"
-              class="w-full bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors hover:cursor-pointer"
-            >
-              Clear All Nails
-            </button>
-          </div>
-        </div>
-
-        <!-- Project Tab -->
-        <div v-if="activeTab === 'project'" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Project Name
-            </label>
-            <input
-              v-model="projectName"
-              type="text"
-              placeholder="Enter project name"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-
-          <div class="flex gap-2">
-            <button
-              @click="() => {$emit('save-project'); testo()}"
-              :disabled="isSaving"
-              class="hover:cursor-pointer flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg v-if="isSaving" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {{ mode === 'edit' ? 'Update Project' : 'Save Project' }}
-            </button>
-          </div>
-
-          <!-- Project Info (for edit mode) -->
-          <div v-if="mode === 'edit' && projectInfo" class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Info</h4>
-            <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              <p><strong>ID:</strong> {{ projectInfo.id }}</p>
-              <p><strong>Owner:</strong> {{ projectInfo.owner?.full_name }}</p>
-              <p><strong>Created:</strong> {{ formatDate(projectInfo.created_at) }}</p>
-              <p><strong>Modified:</strong> {{ formatDate(projectInfo.updated_at) }}</p>
+          <!-- Board Tab -->
+          <div v-if="activeTab === 'board'" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Dots Count Horizontal
+              </label>
+              <input
+                v-model.number="boardSettings.dotsCountHorizontal"
+                type="number"
+                :min="BOARD_CONSTRAINTS.DOTS_COUNT_MIN"
+                :max="BOARD_CONSTRAINTS.DOTS_COUNT_MAX"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
             </div>
-          </div>
-
-          <!-- Nails Statistics -->
-          <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Statistics</h4>
-            <div class="text-sm text-gray-600 dark:text-gray-400">
-              <p>Total Nails: {{ Object.keys(nails).length }}</p>
-              <p>Grid Size: {{ boardSettings.dotsCountHorizontal }}×{{ boardSettings.dotsCountVertical }}</p>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Dots Count Vertical
+              </label>
+              <input
+                v-model.number="boardSettings.dotsCountVertical"
+                type="number"
+                :min="BOARD_CONSTRAINTS.DOTS_COUNT_MIN"
+                :max="BOARD_CONSTRAINTS.DOTS_COUNT_MAX"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
             </div>
-          </div>
-        </div>
-
-        <!-- 3D Preview Tab -->
-        <div v-if="activeTab === '3d-preview'" class="space-y-4">
-          <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">3D Scene Controls</h4>
-            <div class="space-y-3">
-              <!-- Reset Camera Button -->
-              <button
-                @click="resetCamera"
-                class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors text-gray-700 dark:text-gray-300"
-                title="Reset Camera"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>Reset Camera</span>
-              </button>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Margin Between Nails (px)
+              </label>
+              <input
+                v-model.number="boardSettings.marginBetweenNails"
+                type="number"
+                id="margin-between-nails"
+                :min="BOARD_CONSTRAINTS.MARGIN_MIN"
+                :max="BOARD_CONSTRAINTS.MARGIN_MAX"
+                :step="BOARD_CONSTRAINTS.MARGIN_STEP"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Padding Board (px)
+              </label>
+              <input
+                v-model.number="boardSettings.paddingBoard"
+                type="number"
+                :min="BOARD_CONSTRAINTS.PADDING_MIN"
+                :max="BOARD_CONSTRAINTS.PADDING_MAX"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            
+            <!-- Board Color Section -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Board Color
+              </label>
+              <div class="flex flex-wrap gap-3">
+                <div
+                  v-for="colorOption in boardColorOptions"
+                  :key="colorOption.id"
+                  @click="selectBoardColor(colorOption)"
+                  :class="[
+                    'relative cursor-pointer transition-all',
+                    selectedBoardColor === colorOption.id
+                      ? 'ring-2 ring-indigo-600 ring-offset-2'
+                      : 'hover:ring-2 hover:ring-gray-400 hover:ring-offset-1'
+                  ]"
+                  :title="colorOption.label"
+                >
+                  <div
+                    :style="{ backgroundColor: colorOption.id === 'custom' ? customBoardColor : colorOption.color }"
+                    class="w-10 h-10 rounded-full border-2 border-white shadow-md relative"
+                  >
+                    <!-- Pencil icon for custom color -->
+                    <svg v-if="colorOption.id === 'custom'" class="w-4 h-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  </div>
+                  
+                  <!-- Selected indicator -->
+                  <div v-if="selectedBoardColor === colorOption.id" class="absolute -top-1 -right-1 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
               
-              <!-- Auto Rotate Button -->
+              <!-- Custom Color Picker -->
+              <div v-if="selectedBoardColor === 'custom'" class="mt-3">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Custom Color
+                </label>
+                <input
+                  v-model="customBoardColor"
+                  type="color"
+                  class="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Nails Tab -->
+          <div v-if="activeTab === 'nails'" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nail Body Width
+              </label>
+              <div class="flex gap-2">
+                <button
+                  v-for="bodyOption in nailBodyOptions"
+                  :key="bodyOption.id"
+                  @click="selectedNailWidth = bodyOption.id"
+                  :class="[
+                    'w-12 h-12 rounded-lg border-2 transition-all flex items-center justify-center font-bold text-white shadow-md',
+                    selectedNailWidth === bodyOption.id
+                      ? 'border-indigo-500 ring-2 ring-indigo-300 scale-110'
+                      : 'border-gray-300 dark:border-gray-600 hover:scale-105 hover:border-gray-400'
+                  ]"
+                  :style="{ backgroundColor: bodyOption.color }"
+                  :title="bodyOption.label"
+                >
+                  {{ bodyOption.size }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Nail Head Width Section -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nail Head Width
+              </label>
+              <div class="flex gap-2">
+                <button
+                  v-for="headOption in nailHeadOptions"
+                  :key="headOption.id"
+                  @click="selectedNailHead = headOption.id"
+                  :class="[
+                    'w-12 h-12 rounded-lg border-2 transition-all flex items-center justify-center font-bold text-white shadow-md relative',
+                    selectedNailHead === headOption.id
+                      ? 'border-indigo-500 ring-2 ring-indigo-300 scale-110'
+                      : 'border-gray-300 dark:border-gray-600 hover:scale-105 hover:border-gray-400'
+                  ]"
+                  :style="{ backgroundColor: headOption.color }"
+                  :title="headOption.label"
+                >
+                  <!-- Inner circle with border percentage as arc -->
+                  <svg class="absolute w-full h-full" viewBox="0 0 24 24">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="8"
+                      fill="none"
+                      stroke="white"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      :stroke-dasharray="`${(headOption.borderPercentage / 100) * 50.27} 50.27`"
+                      transform="rotate(-90 12 12)"
+                    />
+                  </svg>
+                  <span class="relative z-10">{{ headOption.size }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nail Height (mm)
+              </label>
+              <div class="grid grid-cols-4 gap-2">
+                <button
+                  v-for="height in nailHeightOptions"
+                  :key="height"
+                  @click="selectedNailHeight = height"
+                  :class="[
+                    'p-2 text-sm font-medium rounded-md border transition-colors',
+                    selectedNailHeight === height
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-600'
+                  ]"
+                >
+                  {{ height }}
+                </button>
+              </div>
+            </div>
+
+            <div class="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+              <p class="font-medium text-blue-700 dark:text-blue-300 mb-1">💡 How to use:</p>
+              <ul class="space-y-1 text-blue-600 dark:text-blue-400">
+                <li>• Click any position to place a nail</li>
+                <li>• Click again with same settings to remove</li>
+                <li>• Right-click to remove any nail</li>
+              </ul>
+            </div>
+
+            <div class="flex gap-2">
               <button
-                @click="toggleAutoRotate"
-                class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors"
-                :class="autoRotate ? 'bg-indigo-500 hover:bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300'"
-                title="Toggle Auto Rotation"
+                @click="clearAllNails()"
+                class="w-full bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors hover:cursor-pointer"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>{{ autoRotate ? 'Stop Auto Rotate' : 'Auto Rotate' }}</span>
+                Clear All Nails
               </button>
             </div>
           </div>
 
-          <!-- 3D Scene Info -->
-          <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">3D Scene Info</h4>
-            <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-              <p>Use mouse/trackpad to rotate, zoom, and pan the 3D view</p>
-              <p>The 3D preview updates automatically when you modify the 2D grid</p>
+          <!-- 3D Preview Tab -->
+          <div v-if="activeTab === '3d-preview'" class="space-y-4">
+            <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">3D Scene Controls</h4>
+              <div class="space-y-3">
+                <!-- Reset Camera Button -->
+                <button
+                  @click="resetCamera"
+                  class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors text-gray-700 dark:text-gray-300"
+                  title="Reset Camera"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Reset Camera</span>
+                </button>
+                
+                <!-- Auto Rotate Button -->
+                <button
+                  @click="toggleAutoRotate"
+                  class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors"
+                  :class="autoRotate ? 'bg-indigo-500 hover:bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300'"
+                  title="Toggle Auto Rotation"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>{{ autoRotate ? 'Stop Auto Rotate' : 'Auto Rotate' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3D Scene Info -->
+            <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">3D Scene Info</h4>
+              <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <p>Use mouse/trackpad to rotate, zoom, and pan the 3D view</p>
+                <p>The 3D preview updates automatically when you modify the 2D grid</p>
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </VueDraggableResizable>
@@ -470,9 +491,18 @@
 import { ref, reactive, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import VueDraggableResizable from 'vue-draggable-resizable'
 import 'vue-draggable-resizable/style.css'
-import { use2DGrid } from '@/composables/use2DGrid'
+import { use2DGridCanvas } from '@/composables/use2DGridCanvas'
 import Toast from '@/components/Toast.vue'
 import { useToast } from '@/composables/useToast'
+import {
+  BOARD_DEFAULTS,
+  BOARD_CONSTRAINTS,
+  NAIL_DEFAULTS,
+  NAIL_BODY_OPTIONS,
+  NAIL_HEAD_OPTIONS,
+  BOARD_COLOR_OPTIONS,
+  PANEL_DEFAULTS
+} from '@/constants/boardDefaults'
 
 // Props
 const props = defineProps({
@@ -517,15 +547,19 @@ const { success, error, warning } = useToast()
 const isDark = ref(false)
 const showMobileAlert = ref(false)
 
+// Pan mode state
+const isPanModeActive = ref(false)
+const isSpaceKeyPressed = ref(false)
+
 // Panel state for draggable/resizable functionality
 const isMinimized = ref(false)
 const panelPosition = reactive({
-  x: 20,
-  y: 100 // Position from top instead of bottom for better initial placement
+  x: PANEL_DEFAULTS.POSITION_X,
+  y: PANEL_DEFAULTS.POSITION_Y
 })
 const panelSize = reactive({
-  width: 320,
-  height: 500
+  width: PANEL_DEFAULTS.WIDTH,
+  height: PANEL_DEFAULTS.HEIGHT
 })
 
 // Panel event handlers
@@ -543,10 +577,10 @@ const toggleMinimize = () => {
   isMinimized.value = !isMinimized.value
   if (isMinimized.value) {
     // Store current size and minimize
-    panelSize.height = 60 // Just show the header
+    panelSize.height = PANEL_DEFAULTS.MINIMIZED_HEIGHT
   } else {
     // Restore to a reasonable size
-    panelSize.height = 500
+    panelSize.height = PANEL_DEFAULTS.HEIGHT
   }
 }
 
@@ -562,32 +596,33 @@ const testo = () => {
 
 // Add zoom functionality
 const handleWheel = (event) => {
-  // Check if we're in 3D preview area (ignore events from 3D scene)
-  const is3DPreviewArea = event.target.closest('canvas') || event.target.closest('[class*="threejs"]') || event.target.closest('.threed-preview')
-  
   // Check if we're over UI elements (control panel, etc.)
   const isUIElement = event.target.closest('.fixed, button, input, select, textarea, [role="button"], .control-panel, .floating-panel')
   
-  // If the event is in the 3D area AND not on the control panel, don't handle it
-  if (is3DPreviewArea && !isUIElement) {
-    return
-  }
+  // Check if we're in 3D preview area (ignore events from 3D scene)
+  // Don't check for just 'canvas' - be specific about 3D canvas by checking for threejs/threed-preview context
+  const is3DPreviewArea = event.target.closest('[class*="threejs"]') || event.target.closest('.threed-preview')
   
-  // Allow zooming anywhere on the screen when Ctrl/Cmd is held
+  // Only handle zoom if Ctrl/Cmd is held
   if (event.ctrlKey || event.metaKey) {
+    // Prevent browser zoom when Ctrl/Cmd is held
     event.preventDefault()
-    const delta = event.deltaY
-    const zoomFactor = 0.15
     
-    if (delta < 0) {
-      // Zoom in
-      scale.value = Math.min(scale.value + zoomFactor, 5)
-    } else {
-      // Zoom out
-      scale.value = Math.max(scale.value - zoomFactor, 0.1)
+    // Allow zooming anywhere in 2D section (not over UI elements or 3D area)
+    if (!isUIElement && !is3DPreviewArea) {
+      const delta = event.deltaY
+      const zoomFactor = 0.15
+      
+      if (delta < 0) {
+        // Zoom in
+        scale.value = Math.min(scale.value + zoomFactor, 100) // Max 10000% zoom
+      } else {
+        // Zoom out
+        scale.value = Math.max(scale.value - zoomFactor, 0.1)
+      }
+      
+      updateTransform()
     }
-    
-    updateTransform()
   }
 }
 
@@ -600,23 +635,30 @@ const handleMouseDown = (event) => {
   // Check if we're clicking on UI elements that should not trigger panning
   const isUIElement = event.target.closest('.fixed, button, input, select, textarea, [role="button"], .control-panel, .floating-panel')
   
-  // Check if we're clicking on a nail dot
-  const isNailDot = event.target.closest('.nail-slot')
+  // Check if we're clicking on the grid canvas (2D board)
+  const isGridCanvas = event.target.classList.contains('grid-canvas')
   
-  // Check if we're in 3D preview area (ignore events from 3D scene)
-  const is3DPreviewArea = event.target.closest('canvas') || event.target.closest('[class*="threejs"]') || event.target.closest('.threed-preview')
+  // Check if we're in 3D preview area (different from 2D grid canvas)
+  const is3DPreviewArea = event.target.closest('[class*="threejs"]') || event.target.closest('.threed-preview')
   
-  // If the event is in the 3D area AND not on the control panel, don't handle it
-  if (is3DPreviewArea && !isUIElement) {
+  // Don't handle panning if clicking on UI elements or 3D preview area
+  if (isUIElement || is3DPreviewArea) {
     return
   }
   
-  // Pan with: 1) Middle mouse button anywhere, 2) Left click on background (not UI or nail dots), 3) Alt/Ctrl + left click anywhere
-  if (!isUIElement && (
-    event.button === 1 || // Middle mouse button
-    (event.button === 0 && !isNailDot) || // Left click on background (not on nail dots)
-    (event.button === 0 && (event.altKey || event.ctrlKey)) // Alt/Ctrl + left click (legacy support)
-  )) {
+  // Pan conditions:
+  // 1) Middle mouse button - pan anywhere
+  // 2) Left click on background (not on canvas)
+  // 3) Alt/Ctrl + left click - pan anywhere
+  // 4) Space key held + left click - pan anywhere (NEW)
+  // 5) Pan mode active + left click - pan anywhere (NEW)
+  const shouldPan = event.button === 1 || // Middle mouse button
+                    (event.button === 0 && !isGridCanvas) || // Left click on background
+                    (event.button === 0 && (event.altKey || event.ctrlKey)) || // Alt/Ctrl + left click
+                    (event.button === 0 && isSpaceKeyPressed.value) || // Space + left click
+                    (event.button === 0 && isPanModeActive.value) // Pan mode active + left click
+  
+  if (shouldPan) {
     event.preventDefault()
     isPanning = true
     lastPanX = event.clientX
@@ -632,10 +674,13 @@ const handleMouseDown = (event) => {
 
 const handleMouseMove = (event) => {
   // Check if we're in 3D preview area (ignore events from 3D scene)
-  const is3DPreviewArea = event.target.closest('canvas') || event.target.closest('[class*="threejs"]') || event.target.closest('.threed-preview')
+  const is3DPreviewArea = event.target.closest('[class*="threejs"]') || event.target.closest('.threed-preview')
   
   // Check if we're over UI elements (control panel, etc.)
   const isUIElement = event.target.closest('.fixed, button, input, select, textarea, [role="button"], .control-panel, .floating-panel')
+  
+  // Check if we're over the grid canvas
+  const isGridCanvas = event.target.classList.contains('grid-canvas')
   
   if (isPanning) {
     event.preventDefault()
@@ -649,19 +694,17 @@ const handleMouseMove = (event) => {
     lastPanY = event.clientY
     
     updateTransform()
-  } else if (!is3DPreviewArea || isUIElement) {
-    // Handle cursor changes if not in 3D area OR if over UI elements (like control panel)
-    // Show appropriate cursor based on what's under the mouse
-    const isNailDot = event.target.closest('.nail-slot')
-    
+  } else if (!is3DPreviewArea) {
+    // Handle cursor changes if not in 3D area
     if (isUIElement) {
       // Over UI elements - let them handle their own cursor
       return
-    } else if (isNailDot) {
-      // Over nail dots - show pointer for nail interaction
-      document.body.style.cursor = 'pointer'
-    } else if (event.altKey || event.ctrlKey) {
-      // Over background with modifier keys - show grab cursor
+    } else if (isGridCanvas && !isSpaceKeyPressed.value && !isPanModeActive.value) {
+      // Over grid canvas - the canvas handles its own cursor (pointer for nails, default otherwise)
+      // Don't override it here UNLESS space is pressed or pan mode is active
+      return
+    } else if (event.altKey || event.ctrlKey || isSpaceKeyPressed.value || isPanModeActive.value) {
+      // Over background with modifier keys, space key, or pan mode active - show grab cursor
       document.body.style.cursor = 'grab'
     } else {
       // Over background without modifiers - show grab cursor (since click+drag will pan)
@@ -682,6 +725,21 @@ const handleMouseUp = (event) => {
 
 // Add keyboard event handlers for better UX
 const handleKeyDown = (event) => {
+  // Detect space key press (key code 32 or event.code === 'Space')
+  if (event.code === 'Space' && !isSpaceKeyPressed.value) {
+    // Prevent space from scrolling the page
+    event.preventDefault()
+    isSpaceKeyPressed.value = true
+    
+    // Update cursor to show grab is available
+    const isOverUIElement = document.elementFromPoint(event.clientX || 0, event.clientY || 0)?.closest('.fixed, button, input, select, textarea, [role="button"], .control-panel, .floating-panel')
+    
+    if (!isOverUIElement && !isPanning) {
+      document.body.style.cursor = 'grab'
+    }
+    return
+  }
+  
   // Update cursor when modifier keys are pressed (only if not over UI elements)
   if (event.altKey || event.ctrlKey) {
     const isOverUIElement = document.elementFromPoint(event.clientX || 0, event.clientY || 0)?.closest('.fixed, button, input, select, textarea, [role="button"], .control-panel, .floating-panel')
@@ -693,8 +751,19 @@ const handleKeyDown = (event) => {
 }
 
 const handleKeyUp = (event) => {
+  // Detect space key release
+  if (event.code === 'Space') {
+    isSpaceKeyPressed.value = false
+    
+    // Reset cursor if not panning
+    if (!isPanning && !isPanModeActive.value) {
+      document.body.style.cursor = 'default'
+    }
+    return
+  }
+  
   // Update cursor when modifier keys are released
-  if (!event.altKey && !event.ctrlKey && !isPanning) {
+  if (!event.altKey && !event.ctrlKey && !isPanning && !isSpaceKeyPressed.value && !isPanModeActive.value) {
     const isOverUIElement = document.elementFromPoint(event.clientX || 0, event.clientY || 0)?.closest('.fixed, button, input, select, textarea, [role="button"], .control-panel, .floating-panel')
     const isOverNailDot = document.elementFromPoint(event.clientX || 0, event.clientY || 0)?.closest('.nail-slot')
     
@@ -704,8 +773,7 @@ const handleKeyUp = (event) => {
     } else if (isOverNailDot) {
       document.body.style.cursor = 'pointer'
     } else {
-      // Over background - show grab cursor (since click+drag will pan)
-      document.body.style.cursor = 'grab'
+      document.body.style.cursor = 'default'
     }
   }
 }
@@ -717,51 +785,44 @@ const toggleDarkMode = () => {
   localStorage.setItem('darkMode', isDark.value)
 }
 
+// Toggle pan mode
+const togglePanMode = () => {
+  isPanModeActive.value = !isPanModeActive.value
+}
+
 // Board settings
 const boardSettings = reactive({
-  dotsCountHorizontal: 20,
-  dotsCountVertical: 20,
-  marginBetweenNails: 10,
-  paddingBoard: 40,
-  boardColor: '#8B4513'
+  dotsCountHorizontal: BOARD_DEFAULTS.DOTS_COUNT_HORIZONTAL,
+  dotsCountVertical: BOARD_DEFAULTS.DOTS_COUNT_VERTICAL,
+  marginBetweenNails: BOARD_DEFAULTS.MARGIN_BETWEEN_NAILS,
+  paddingBoard: BOARD_DEFAULTS.PADDING_BOARD,
+  boardColor: BOARD_DEFAULTS.BOARD_COLOR
 })
 
 // Nail options
-const nailHeightOptions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-const selectedNailHeight = ref(8)
+const nailHeightOptions = NAIL_DEFAULTS.HEIGHT_OPTIONS
+const selectedNailHeight = ref(NAIL_DEFAULTS.DEFAULT_HEIGHT)
 
-const nailBodyOptions = [
-  { id: 'thin', label: 'Thin Body', size: 'S', color: '#ef4444' },
-  { id: 'medium', label: 'Medium Body', size: 'M', color: '#3b82f6' },
-  { id: 'thick', label: 'Thick Body', size: 'L', color: '#10b981' }
-]
+const nailBodyOptions = NAIL_BODY_OPTIONS
+
 const selectedNailWidth = ref('thick')
 
-const nailHeadOptions = [
-  { id: 'small', label: 'Small Head', size: 'S', color: '#8b5cf6', borderPercentage: 30 },
-  { id: 'medium', label: 'Medium Head', size: 'M', color: '#eab308', borderPercentage: 60 },
-  { id: 'large', label: 'Large Head', size: 'L', color: '#00ffff', borderPercentage: 100 }
-]
+const nailHeadOptions = NAIL_HEAD_OPTIONS
+
 const selectedNailHead = ref('medium')
 
 // Board color options
-const boardColorOptions = [
-  { id: '#8B4513', label: 'Brown', color: '#8B4513' },
-  { id: '#D2691E', label: 'Chocolate', color: '#D2691E' },
-  { id: '#CD853F', label: 'Peru', color: '#CD853F' },
-  { id: '#DEB887', label: 'Burlywood', color: '#DEB887' },
-  { id: '#F5DEB3', label: 'Wheat', color: '#F5DEB3' },
-  { id: 'custom', label: 'Custom', color: '#8B4513' }
-]
-const selectedBoardColor = ref('#8B4513')
-const customBoardColor = ref('#8B4513')
+const boardColorOptions = BOARD_COLOR_OPTIONS
+
+const selectedBoardColor = ref(BOARD_DEFAULTS.BOARD_COLOR)
+const customBoardColor = ref(BOARD_DEFAULTS.BOARD_COLOR)
 
 // Tab management
 const activeTab = ref('board')
 const tabs = [
+  { id: 'project', label: 'Project' },
   { id: 'board', label: 'Board' },
   { id: 'nails', label: 'Nails' },
-  { id: 'project', label: 'Project' },
   { id: '3d-preview', label: '3D Preview' }
 ]
 
@@ -798,7 +859,7 @@ watch(customBoardColor, (newColor) => {
   }
 })
 
-// Use 2D Grid composable
+// Use 2D Grid Canvas composable
 const {
   scale,
   xOffset,
@@ -810,11 +871,11 @@ const {
   clearAllNails,
   resetView,
   saveGrid,
-  loadGrid,
   exportGrid,
   importGrid,
-  initializeGrid
-} = use2DGrid(boardSettings, selectedNailHeight, selectedNailWidth, nailBodyOptions, selectedNailHead, nailHeadOptions)
+  initializeGrid,
+  cleanup
+} = use2DGridCanvas(boardSettings, selectedNailHeight, selectedNailWidth, nailBodyOptions, selectedNailHead, nailHeadOptions, isPanModeActive)
 
 // File import handler
 const handleFileImport = async (event) => {
@@ -883,6 +944,9 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', handleMouseUp)
   window.removeEventListener('keydown', handleKeyDown)
   window.removeEventListener('keyup', handleKeyUp)
+  
+  // Cleanup canvas
+  cleanup()
 })
 
 // Expose methods for parent components

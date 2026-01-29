@@ -188,7 +188,7 @@ export function use3DScene(canvasContainer) {
       controls.value.enableRotate = true
       controls.value.maxPolarAngle = Math.PI // Allow full rotation
       controls.value.minDistance = 10
-      controls.value.maxDistance = 200
+      controls.value.maxDistance = 500 // Maximum zoom out distance
 
       // Add event listeners for debugging
       controls.value.addEventListener('start', () => {
@@ -244,8 +244,24 @@ export function use3DScene(canvasContainer) {
     const directionalLight = new THREE.DirectionalLight(0xffffff, settings.value.lightIntensity)
     directionalLight.position.set(50, 50, 50)
     directionalLight.castShadow = true
+    
+    // Configure shadow camera to cover the entire board area
+    const boardWidth = settings.value.boardWidth || settings.value.boardSize
+    const boardDepth = settings.value.boardDepth || settings.value.boardSize
+    const shadowCameraSize = Math.max(boardWidth, boardDepth) * 0.8
+    
+    directionalLight.shadow.camera.left = -shadowCameraSize
+    directionalLight.shadow.camera.right = shadowCameraSize
+    directionalLight.shadow.camera.top = shadowCameraSize
+    directionalLight.shadow.camera.bottom = -shadowCameraSize
+    directionalLight.shadow.camera.near = 0.5
+    directionalLight.shadow.camera.far = 150
+    
+    // Higher resolution for better shadow quality
     directionalLight.shadow.mapSize.width = 2048
     directionalLight.shadow.mapSize.height = 2048
+    directionalLight.shadow.bias = -0.0001 // Reduce shadow acne
+    
     scene.value.add(directionalLight)
     lights.push(directionalLight)
   }
@@ -367,9 +383,11 @@ export function use3DScene(canvasContainer) {
 
     nailInstancedMesh = markRaw(new THREE.InstancedMesh(nailGeometry, nailMaterial, instanceCount))
     nailInstancedMesh.castShadow = true
+    nailInstancedMesh.receiveShadow = true
 
     nailHeadInstancedMesh = markRaw(new THREE.InstancedMesh(headGeometry, headMaterial, instanceCount))
     nailHeadInstancedMesh.castShadow = true
+    nailHeadInstancedMesh.receiveShadow = true
 
     // Generate nail positions and heights - mark matrices as raw
     const matrix = markRaw(new THREE.Matrix4())
@@ -433,6 +451,7 @@ export function use3DScene(canvasContainer) {
 
     nailInstancedMesh = markRaw(new THREE.InstancedMesh(nailGeometry, nailMaterial, instanceCount))
     nailInstancedMesh.castShadow = true
+    nailInstancedMesh.receiveShadow = true
 
     // Create nail heads - mark as raw to prevent reactivity issues
     const headGeometry = markRaw(createNailHeadGeometry())
@@ -444,6 +463,7 @@ export function use3DScene(canvasContainer) {
 
     nailHeadInstancedMesh = markRaw(new THREE.InstancedMesh(headGeometry, headMaterial, instanceCount))
     nailHeadInstancedMesh.castShadow = true
+    nailHeadInstancedMesh.receiveShadow = true
 
     // Generate nail positions and heights - mark matrices as raw
     const matrix = markRaw(new THREE.Matrix4())
