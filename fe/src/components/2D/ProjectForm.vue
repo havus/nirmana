@@ -49,18 +49,7 @@
       </router-link> -->
       
       <!-- Dark Mode Toggle -->
-      <button 
-        @click="toggleDarkMode()"
-        class="p-2 bg-white/80 dark:bg-slate-800/80 rounded-full shadow-lg backdrop-blur hover:bg-white/90 dark:hover:bg-slate-800/90 transition-colors"
-        :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-      >
-        <svg v-if="!isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      </button>
+      <ThemeToggle variant="rounded" />
       
       <!-- Pan Mode Toggle -->
       <button 
@@ -494,6 +483,7 @@ import 'vue-draggable-resizable/style.css'
 import { use2DGridCanvas } from '@/composables/use2DGridCanvas'
 import Toast from '@/components/Toast.vue'
 import { useToast } from '@/composables/useToast'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import {
   BOARD_DEFAULTS,
   BOARD_CONSTRAINTS,
@@ -544,7 +534,6 @@ const emit = defineEmits(['save-project', 'reset-3d-camera', 'toggle-3d-auto-rot
 const { success, error, warning } = useToast()
 
 // Dark mode and mobile detection
-const isDark = ref(false)
 const showMobileAlert = ref(false)
 
 // Pan mode state
@@ -778,13 +767,6 @@ const handleKeyUp = (event) => {
   }
 }
 
-// Toggle dark mode
-const toggleDarkMode = () => {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-  localStorage.setItem('darkMode', isDark.value)
-}
-
 // Toggle pan mode
 const togglePanMode = () => {
   isPanModeActive.value = !isPanModeActive.value
@@ -913,13 +895,6 @@ onMounted(() => {
   // Check for mobile
   if (checkMobile()) {
     showMobileAlert.value = true
-  }
-
-  // Load dark mode preference
-  const savedDarkMode = localStorage.getItem('darkMode')
-  if (savedDarkMode !== null) {
-    isDark.value = JSON.parse(savedDarkMode)
-    document.documentElement.classList.toggle('dark', isDark.value)
   }
 
   // Generate initial grid
