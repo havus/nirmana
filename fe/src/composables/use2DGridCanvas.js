@@ -554,11 +554,38 @@ export function use2DGridCanvas(boardSettings, selectedNailHeight, selectedNailW
     })
   }
   
-  // Watch for board setting changes
+  // Helper function to remove nails outside grid bounds
+  const removeOutOfBoundsNails = () => {
+    const nailKeys = Object.keys(nails.value)
+    
+    nailKeys.forEach(key => {
+      const [x, y] = key.split(',').map(Number)
+      
+      // Remove nail if it's outside the current grid bounds
+      if (x >= boardSettings.dotsCountHorizontal || y >= boardSettings.dotsCountVertical) {
+        delete nails.value[key]
+      }
+    })
+  }
+
+  // Watch for grid size changes separately (only remove out of bounds nails)
   watch(
     () => [
       boardSettings.dotsCountHorizontal,
-      boardSettings.dotsCountVertical,
+      boardSettings.dotsCountVertical
+    ],
+    () => {
+      removeOutOfBoundsNails()
+      nextTick(() => {
+        generateGrid()
+      })
+    },
+    { deep: true }
+  )
+
+  // Watch for other board setting changes (regenerate grid without removing nails)
+  watch(
+    () => [
       boardSettings.marginBetweenNails,
       boardSettings.paddingBoard,
       boardSettings.boardColor

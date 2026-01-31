@@ -198,6 +198,19 @@
               </button>
             </div>
 
+            <!-- Load Template Button (only in new mode) -->
+            <div v-if="mode === 'new'">
+              <button
+                @click="showTemplateModal = true"
+                class="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
+                Load Template
+              </button>
+            </div>
+
             <!-- Project Info (for edit mode) -->
             <div v-if="mode === 'edit' && projectInfo" class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
               <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Info</h4>
@@ -473,6 +486,78 @@
         </div>
       </div>
     </VueDraggableResizable>
+
+    <!-- Template Selection Modal -->
+    <div 
+      v-if="showTemplateModal" 
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      @click.self="showTemplateModal = false"
+    >
+      <div class="bg-white dark:bg-slate-800 rounded-xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl">
+        <!-- Modal Header -->
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Select Project Template</h3>
+          <button
+            @click="showTemplateModal = false"
+            class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-4 overflow-y-auto max-h-[calc(85vh-60px)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div
+              v-for="template in projectTemplates"
+              :key="template.id"
+              @click="loadTemplate(template)"
+              class="p-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-400 transition-all cursor-pointer hover:shadow-md bg-white dark:bg-slate-700 group"
+            >
+              <div class="flex items-start gap-3">
+                <!-- Template Icon -->
+                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                  </svg>
+                </div>
+
+                <!-- Template Info -->
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-1 truncate">{{ template.name }}</h4>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">{{ template.description }}</p>
+                  <div class="flex flex-wrap gap-1.5 text-xs">
+                    <span class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full whitespace-nowrap">
+                      {{ template.boardConfig.dotsCountHorizontal }}×{{ template.boardConfig.dotsCountVertical }}
+                    </span>
+                    <span class="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full whitespace-nowrap">
+                      {{ Object.keys(template.nails).length }} Nails
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Load Icon -->
+                <div class="flex-shrink-0 self-center">
+                  <svg class="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state if no templates -->
+          <div v-if="projectTemplates.length === 0" class="text-center py-8">
+            <svg class="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-sm text-gray-600 dark:text-gray-400">No templates available</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -484,6 +569,7 @@ import { use2DGridCanvas } from '@/composables/use2DGridCanvas'
 import Toast from '@/components/Toast.vue'
 import { useToast } from '@/composables/useToast'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { getAllTemplates } from '@/constants/projectTemplates'
 import {
   BOARD_DEFAULTS,
   BOARD_CONSTRAINTS,
@@ -810,6 +896,42 @@ const tabs = [
 
 // Project settings
 const projectName = ref('')
+
+// Template management
+const showTemplateModal = ref(false)
+const projectTemplates = getAllTemplates()
+
+// Load template function
+const loadTemplate = (template) => {
+  // Apply board configuration
+  boardSettings.dotsCountHorizontal = template.boardConfig.dotsCountHorizontal
+  boardSettings.dotsCountVertical = template.boardConfig.dotsCountVertical
+  boardSettings.marginBetweenNails = template.boardConfig.marginBetweenNails
+  boardSettings.paddingBoard = template.boardConfig.paddingBoard
+  boardSettings.boardColor = template.boardConfig.boardColor
+  
+  // Apply nails configuration
+  // Clear existing nails first
+  Object.keys(nails.value).forEach(key => {
+    delete nails.value[key]
+  })
+  
+  // Add template nails
+  Object.entries(template.nails).forEach(([key, nail]) => {
+    nails.value[key] = { ...nail }
+  })
+  
+  // Close modal
+  showTemplateModal.value = false
+  
+  // Show success message
+  success(`Template "${template.name}" loaded successfully!`)
+  
+  // Reset view to see the full board
+  nextTick(() => {
+    resetView()
+  })
+}
 
 // 3D Preview controls
 const autoRotate = ref(false)

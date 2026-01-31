@@ -38,8 +38,8 @@
 
     <!-- Main Content -->
     <div class="pt-16 min-h-screen py-8">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+      <div class="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+
         <!-- Loading State -->
         <div v-if="isLoadingProfile" class="flex items-center justify-center min-h-[50vh]">
           <div class="text-center">

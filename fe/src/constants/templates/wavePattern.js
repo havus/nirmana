@@ -1,0 +1,133 @@
+/**
+ * Wave Pattern Template
+ * A 16x12 grid with nails of varying heights creating a 3D wave effect
+ * This template demonstrates the power of height variation in string art
+ */
+
+export default {
+  id: 'wave-pattern',
+  name: 'Wave Pattern (3D)',
+  description: 'A complex wave pattern with varying nail heights creating a 3D effect on a 16×12 grid',
+  boardConfig: {
+    dotsCountHorizontal: 16,
+    dotsCountVertical: 12,
+    marginBetweenNails: 18,
+    paddingBoard: 10,
+    boardColor: '#CD853F'
+  },
+  nails: {
+    // Row 0 - Very low wave
+    '2,0': { height: 14, width: 2, headType: 'flat', bodyType: 'round' },
+    '3,0': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    '4,0': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '5,0': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '6,0': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '7,0': { height: 30, width: 2, headType: 'flat', bodyType: 'round' },
+    '8,0': { height: 30, width: 2, headType: 'flat', bodyType: 'round' },
+    '9,0': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '10,0': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '11,0': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '12,0': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    '13,0': { height: 14, width: 2, headType: 'flat', bodyType: 'round' },
+    
+    // Row 2 - Low to medium wave
+    '1,2': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    '2,2': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    '3,2': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '4,2': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '5,2': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '6,2': { height: 34, width: 2, headType: 'flat', bodyType: 'round' },
+    '7,2': { height: 38, width: 2, headType: 'flat', bodyType: 'round' },
+    '8,2': { height: 38, width: 2, headType: 'flat', bodyType: 'round' },
+    '9,2': { height: 34, width: 2, headType: 'flat', bodyType: 'round' },
+    '10,2': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '11,2': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '12,2': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '13,2': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    '14,2': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    
+    // Row 4 - Medium wave
+    '0,4': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    '1,4': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '2,4': { height: 26, width: 2, headType: 'flat', bodyType: 'round' },
+    '3,4': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '4,4': { height: 36, width: 2, headType: 'flat', bodyType: 'round' },
+    '5,4': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '6,4': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '7,4': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '8,4': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '9,4': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '10,4': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '11,4': { height: 36, width: 2, headType: 'flat', bodyType: 'round' },
+    '12,4': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '13,4': { height: 26, width: 2, headType: 'flat', bodyType: 'round' },
+    '14,4': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '15,4': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    
+    // Row 6 - Peak wave (tallest)
+    '0,6': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '1,6': { height: 30, width: 2, headType: 'flat', bodyType: 'round' },
+    '2,6': { height: 34, width: 2, headType: 'flat', bodyType: 'round' },
+    '3,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '4,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '5,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '6,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '7,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '8,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '9,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '10,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '11,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '12,6': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '13,6': { height: 34, width: 2, headType: 'flat', bodyType: 'round' },
+    '14,6': { height: 30, width: 2, headType: 'flat', bodyType: 'round' },
+    '15,6': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    
+    // Row 8 - Descending wave
+    '0,8': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    '1,8': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '2,8': { height: 26, width: 2, headType: 'flat', bodyType: 'round' },
+    '3,8': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '4,8': { height: 36, width: 2, headType: 'flat', bodyType: 'round' },
+    '5,8': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '6,8': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '7,8': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '8,8': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '9,8': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '10,8': { height: 40, width: 2, headType: 'flat', bodyType: 'round' },
+    '11,8': { height: 36, width: 2, headType: 'flat', bodyType: 'round' },
+    '12,8': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '13,8': { height: 26, width: 2, headType: 'flat', bodyType: 'round' },
+    '14,8': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '15,8': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    
+    // Row 10 - Low wave
+    '1,10': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    '2,10': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    '3,10': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '4,10': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '5,10': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '6,10': { height: 34, width: 2, headType: 'flat', bodyType: 'round' },
+    '7,10': { height: 38, width: 2, headType: 'flat', bodyType: 'round' },
+    '8,10': { height: 38, width: 2, headType: 'flat', bodyType: 'round' },
+    '9,10': { height: 34, width: 2, headType: 'flat', bodyType: 'round' },
+    '10,10': { height: 32, width: 2, headType: 'flat', bodyType: 'round' },
+    '11,10': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '12,10': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '13,10': { height: 20, width: 2, headType: 'flat', bodyType: 'round' },
+    '14,10': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    
+    // Row 11 - Very low wave (bottom edge)
+    '2,11': { height: 14, width: 2, headType: 'flat', bodyType: 'round' },
+    '3,11': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    '4,11': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '5,11': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '6,11': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '7,11': { height: 30, width: 2, headType: 'flat', bodyType: 'round' },
+    '8,11': { height: 30, width: 2, headType: 'flat', bodyType: 'round' },
+    '9,11': { height: 28, width: 2, headType: 'flat', bodyType: 'round' },
+    '10,11': { height: 24, width: 2, headType: 'flat', bodyType: 'round' },
+    '11,11': { height: 22, width: 2, headType: 'flat', bodyType: 'round' },
+    '12,11': { height: 18, width: 2, headType: 'flat', bodyType: 'round' },
+    '13,11': { height: 14, width: 2, headType: 'flat', bodyType: 'round' },
+  }
+}
