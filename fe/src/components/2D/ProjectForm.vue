@@ -919,7 +919,11 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', handleMouseUp)
   window.removeEventListener('keydown', handleKeyDown)
   window.removeEventListener('keyup', handleKeyUp)
-  
+
+  // Reset cursor and user-select styles
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+
   // Cleanup canvas
   cleanup()
 })

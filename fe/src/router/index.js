@@ -1,15 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import NewProject2D from '../views/2D/NewProjectView.vue'
-import EditProject2D from '../views/2D/EditProjectView.vue'
-import EditProject3D from '../views/3D/EditProjectView.vue'
+import EditProject from '../views/projects/EditProjectView.vue'
 import NewProject from '../views/projects/NewProjectView.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import VerifyEmailView from '../views/VerifyEmailView.vue'
-import ProfileView from '../views/ProfileView.vue'
-import ForgotPasswordView from '../views/ForgotPasswordView.vue'
-import ResetPasswordView from '../views/ResetPasswordView.vue'
+import ProjectsListView from '../views/projects/ProjectsListView.vue'
+import LoginView from '../views/auth/LoginView.vue'
+import RegisterView from '../views/auth/RegisterView.vue'
+import VerifyEmailView from '../views/auth/VerifyEmailView.vue'
+import ProfileView from '../views/profiles/ProfileView.vue'
+import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue'
+import ResetPasswordView from '../views/auth/ResetPasswordView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,14 +19,9 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/2d/new',
-      name: '2d-new',
-      component: NewProject2D,
-    },
-    {
-      path: '/2d/edit/:id',
-      name: '2d-edit',
-      component: EditProject2D,
+      path: '/projects/:id/edit',
+      name: 'projects-edit',
+      component: EditProject,
       props: true,
     },
     {
@@ -35,16 +29,10 @@ const router = createRouter({
       name: 'projects-new',
       component: NewProject,
     },
-    // {
-    //   path: '/3d',
-    //   name: '3d',
-    //   component: NewProject3D,
-    // },
     {
-      path: '/3d/edit/:id',
-      name: '3d-edit',
-      component: EditProject3D,
-      props: true,
+      path: '/projects',
+      name: 'projects',
+      component: ProjectsListView,
     },
     {
       path: '/login',

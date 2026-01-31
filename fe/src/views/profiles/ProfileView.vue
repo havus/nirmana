@@ -27,30 +27,7 @@
           <!-- Right Section -->
           <div class="flex items-center space-x-3">
             <!-- Profile Button -->
-            <div class="relative">
-              <button 
-                @click="showProfileMenu = !showProfileMenu"
-                class="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors duration-200"
-              >
-                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span class="text-white text-sm font-semibold">{{ userInitials }}</span>
-                </div>
-                <span class="hidden sm:block text-gray-700 dark:text-gray-300 font-medium">{{ userFullName }}</span>
-              </button>
-              
-              <!-- Profile Dropdown -->
-              <div v-if="showProfileMenu" class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-10">
-                <button 
-                  @click="handleSignOut"
-                  class="w-full flex items-center px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-200"
-                >
-                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Sign Out
-                </button>
-              </div>
-            </div>
+            <ProfileButton />
             
             <!-- Theme Toggle -->
             <ThemeToggle />
@@ -400,6 +377,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDarkMode } from '@/composables/useDarkMode'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import ProfileButton from '@/components/ProfileButton.vue'
 
 const router = useRouter()
 
@@ -407,7 +385,6 @@ const router = useRouter()
 const { isDark, toggleDarkMode } = useDarkMode()
 
 // State
-const showProfileMenu = ref(false)
 const activeTab = ref('account')
 const isLoading = ref(false)
 const isLoadingProfile = ref(true)
@@ -562,13 +539,6 @@ const loadUserData = async () => {
   } finally {
     isLoadingProfile.value = false
   }
-}
-
-// Handle sign out
-const handleSignOut = () => {
-  document.cookie = 'sess_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-  document.cookie = 'user_data=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-  router.push('/')
 }
 
 // Set theme

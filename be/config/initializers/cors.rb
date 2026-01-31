@@ -7,10 +7,14 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins '*'  # Allow all origins for development
+    # Allow multiple frontend URLs from environment variable
+    # Format: "http://localhost:4442,http://localhost:3030,https://yourdomain.com"
+    frontend_urls = ENV.fetch('FRONTEND_URLS', 'http://localhost:4442,http://localhost:3030')
+    origins frontend_urls.split(',').map(&:strip)
 
     resource "*",
       headers: :any,
-      methods: [:get, :post, :put, :patch, :delete]
+      methods: [:get, :post, :put, :patch, :delete, :options, :head],
+      credentials: true # Important for cookies/authorization headers
   end
 end

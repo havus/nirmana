@@ -28,6 +28,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       RAILS_MAX_THREADS: 5
+      FRONTEND_URLS: http://localhost:4442,http://localhost:3030
     env_file:
       - .env
     ports:

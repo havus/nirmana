@@ -33,44 +33,7 @@
             </div>
 
             <!-- Profile Section (when logged in) -->
-            <div v-if="isLoggedIn" class="relative">
-              <button 
-                @click="showProfileMenu = !showProfileMenu"
-                class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors duration-200"
-              >
-                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span class="text-white text-sm font-semibold">{{ userInitials }}</span>
-                </div>
-                <span class="hidden sm:block text-gray-700 dark:text-gray-300 font-medium">{{ userFullName }}</span>
-                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              <!-- Profile Dropdown -->
-              <div v-if="showProfileMenu" class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-10">
-                <router-link 
-                  to="/profile"
-                  @click="showProfileMenu = false"
-                  class="flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-200"
-                >
-                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  View Profile
-                </router-link>
-                <hr class="my-1 border-gray-200 dark:border-gray-600">
-                <button 
-                  @click="handleSignOut"
-                  class="w-full flex items-center px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-200"
-                >
-                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Sign Out
-                </button>
-              </div>
-            </div>
+            <ProfileButton v-if="isLoggedIn" />
             
             <!-- Mobile Auth Menu (when not logged in) -->
             <div v-if="!isLoggedIn" class="sm:hidden relative">
@@ -218,7 +181,7 @@
         
         <!-- Additional Info -->
         <div class="mt-12 text-center">
-          <p class="text-gray-500 dark:text-gray-400 text-sm">
+          <p class="text-gray-500 dark:text-gray-400 text-sm my-7">
             Built with ❤️ using Vue.js 3, Three.js, and Tailwind CSS
           </p>
         </div>
@@ -239,16 +202,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import ProfileButton from '@/components/ProfileButton.vue'
 
 // Mobile menu state
 const showMobileMenu = ref(false)
-const showProfileMenu = ref(false)
 
 // Authentication state
 const isLoggedIn = ref(false)
 const userData = ref(null)
-const userFullName = ref('')
-const userInitials = ref('')
 
 // Cookie utility function
 const getCookie = (name) => {
@@ -267,8 +228,6 @@ const checkAuthStatus = () => {
     isLoggedIn.value = true
     try {
       userData.value = JSON.parse(userDataCookie)
-      userFullName.value = `${userData.value.first_name} ${userData.value.last_name}`
-      userInitials.value = `${userData.value.first_name.charAt(0)}${userData.value.last_name.charAt(0)}`.toUpperCase()
     } catch (error) {
       console.error('Error parsing user data:', error)
       isLoggedIn.value = false
@@ -276,23 +235,6 @@ const checkAuthStatus = () => {
   } else {
     isLoggedIn.value = false
   }
-}
-
-// Handle sign out
-const handleSignOut = () => {
-  // Clear cookies
-  document.cookie = 'sess_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-  document.cookie = 'user_data=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-  
-  // Reset state
-  isLoggedIn.value = false
-  userData.value = null
-  userFullName.value = ''
-  userInitials.value = ''
-  showProfileMenu.value = false
-  
-  // Refresh the page to update the UI
-  window.location.reload()
 }
 
 // Check auth status when component mounts

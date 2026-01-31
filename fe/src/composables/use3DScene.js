@@ -359,6 +359,20 @@ export function use3DScene(canvasContainer) {
     const marginBetweenNails = customData.marginBetweenNails / 10 // Convert mm to cm
     const paddingBoard = customData.paddingBoard / 10 // Convert mm to cm
 
+    // Calculate the actual board dimensions including padding
+    // The grid represents nail positions, so we need (gridSize - 1) * spacing for the nail area
+    const nailAreaWidth = (gridWidth - 1) * marginBetweenNails
+    const nailAreaDepth = (gridHeight - 1) * marginBetweenNails
+    
+    // Add padding on all sides (2x padding for both sides)
+    const totalBoardWidth = nailAreaWidth + (paddingBoard * 2)
+    const totalBoardDepth = nailAreaDepth + (paddingBoard * 2)
+    
+    // Update board dimensions and recreate it with padding
+    settings.value.boardWidth = totalBoardWidth
+    settings.value.boardDepth = totalBoardDepth
+    createBoard()
+
     // Get nail positions from the data
     const nailPositions = Object.keys(nailsData)
     const instanceCount = nailPositions.length

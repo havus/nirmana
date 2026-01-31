@@ -78,24 +78,37 @@ const convertBoardConfigTo3D = (boardConfig, nailsData) => {
     const colorStr = boardConfig.boardColor.replace('#', '')
     boardColorHex = parseInt(colorStr, 16)
   }
-  
+
+  // Calculate board dimensions properly:
+  // The nail area size = (gridSize - 1) * spacing (distance between first and last nail)
+  // Total board size = nail area + padding on both sides
+  const gridWidth = boardConfig.dotsCountHorizontal || 20
+  const gridHeight = boardConfig.dotsCountVertical || 20
+  const marginBetweenNails = (boardConfig.marginBetweenNails || 10) / 10 // mm to cm
+  const paddingBoard = (boardConfig.paddingBoard || 40) / 10 // mm to cm
+
+  const nailAreaWidth = (gridWidth - 1) * marginBetweenNails
+  const nailAreaDepth = (gridHeight - 1) * marginBetweenNails
+  const totalBoardWidth = nailAreaWidth + (paddingBoard * 2)
+  const totalBoardDepth = nailAreaDepth + (paddingBoard * 2)
+
   const settings = {
     boardColor: boardColorHex,
-    boardWidth: (boardConfig.dotsCountHorizontal || 20) * ((boardConfig.marginBetweenNails || 10) / 10),
-    boardDepth: (boardConfig.dotsCountVertical || 20) * ((boardConfig.marginBetweenNails || 10) / 10),
+    boardWidth: totalBoardWidth,
+    boardDepth: totalBoardDepth,
     boardHeight: 2,
-    nailSpacing: (boardConfig.marginBetweenNails || 10) / 10,
-    edgeMargin: (boardConfig.paddingBoard || 40) / 100,
+    nailSpacing: marginBetweenNails,
+    edgeMargin: paddingBoard,
     // Add custom nail data for the 3D scene
     customNailData: {
       nails: nailsData || {},
-      gridWidth: boardConfig.dotsCountHorizontal || 20,
-      gridHeight: boardConfig.dotsCountVertical || 20,
+      gridWidth: gridWidth,
+      gridHeight: gridHeight,
       marginBetweenNails: boardConfig.marginBetweenNails || 10,
       paddingBoard: boardConfig.paddingBoard || 40
     }
   }
-  
+
   return settings
 }
 
