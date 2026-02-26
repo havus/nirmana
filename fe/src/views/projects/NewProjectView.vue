@@ -13,6 +13,7 @@
         @save-project="handleSaveProject"
         @reset-3d-camera="handle3DCameraReset"
         @toggle-3d-auto-rotate="handle3DAutoRotateToggle"
+        @toggle-instanced-mesh="handleInstancedMeshToggle"
         ref="projectFormRef"
       />
     </div>
@@ -81,11 +82,14 @@
         <!-- 3D Preview Component -->
         <ThreeDPreview
           v-if="canShow3D"
+          :key="previewKey"
           :nails-data="nailsData"
           :board-config="boardConfig"
           :auto-rotate="autoRotate3D"
+          :use-instanced-mesh="useInstancedMesh3D"
           :reset-camera-trigger="resetCameraTrigger"
           :resize-trigger="resizeTrigger"
+          @performance-update="handlePerformanceUpdate"
         />
       </div>
     </div>
@@ -117,6 +121,7 @@ const previewKey = ref(0) // Force re-render of 3D preview
 const autoRotate3D = ref(false)
 const resetCameraTrigger = ref(0)
 const resizeTrigger = ref(0)
+const useInstancedMesh3D = ref(true)
 
 // Resizable 3D preview state
 const previewWidth = ref(50) // Percentage of screen width
@@ -164,6 +169,35 @@ const handle3DCameraReset = () => {
 
 const handle3DAutoRotateToggle = (isEnabled) => {
   autoRotate3D.value = isEnabled
+}
+
+const handleInstancedMeshToggle = (useInstanced) => {
+  // Update the setting
+  useInstancedMesh3D.value = useInstanced
+  
+  // Force re-render the 3D scene with the new setting
+  if (canShow3D.value) {
+    nextTick(() => {
+      previewKey.value++
+    })
+  }
+}
+
+const handlePerformanceUpdate = (perfData) => {
+  // Pass performance data to ProjectForm component
+  if (projectFormRef.value && projectFormRef.value.updatePerformanceMetrics) {
+    projectFormRef.value.updatePerformanceMetrics(
+      perfData.fps,
+      perfData.frameTime,
+      perfData.memory,
+      {
+        drawCalls: perfData.drawCalls,
+        triangles: perfData.triangles,
+        geometries: perfData.geometries,
+        renderTime: perfData.renderTime
+      }
+    )
+  }
 }
 
 // Resize handlers

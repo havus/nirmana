@@ -38,6 +38,10 @@ const props = defineProps({
   resizeTrigger: {
     type: Number,
     default: 0
+  },
+  useInstancedMesh: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -62,6 +66,13 @@ const {
   camera,
   renderer,
   controls,
+  fps,
+  memoryUsage,
+  drawCalls,
+  triangles,
+  geometries,
+  textures,
+  renderTime,
   initScene,
   createNails,
   updateSettings,
@@ -99,6 +110,7 @@ const convertBoardConfigTo3D = (boardConfig, nailsData) => {
     boardHeight: 2,
     nailSpacing: marginBetweenNails,
     edgeMargin: paddingBoard,
+    useInstancedMesh: props.useInstancedMesh !== undefined ? props.useInstancedMesh : true,
     // Add custom nail data for the 3D scene
     customNailData: {
       nails: nailsData || {},
@@ -195,10 +207,33 @@ watch(() => props.resetCameraTrigger, () => {
   }
 })
 
+// Emits
+const emit = defineEmits(['performance-update'])
+
 // Watch for resize trigger
 watch(() => props.resizeTrigger, () => {
   nextTick(() => {
     onWindowResize()
+  })
+})
+
+// Watch for performance changes and emit to parent
+watch([fps, memoryUsage, drawCalls, triangles, geometries, renderTime], 
+  ([newFps, newMemory, newDrawCalls, newTriangles, newGeometries, newRenderTime]) => {
+  // Calculate frame time from FPS
+  const frameTime = newFps > 0 ? 1000 / newFps : 0
+  
+  // Format memory for display
+  const memoryDisplay = newMemory > 0 ? `${newMemory} MB` : null
+  
+  emit('performance-update', {
+    fps: newFps,
+    frameTime: frameTime,
+    memory: memoryDisplay,
+    drawCalls: newDrawCalls,
+    triangles: newTriangles,
+    geometries: newGeometries,
+    renderTime: newRenderTime.toFixed(2)
   })
 })
 
@@ -212,6 +247,7 @@ onMounted(() => {
 onUnmounted(() => {
   // Clear any pending timeout
   if (updateTimeout) clearTimeout(updateTimeout)
+  
   // Cleanup is handled by the composable
 })
 </script>

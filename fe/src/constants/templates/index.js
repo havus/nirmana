@@ -12,6 +12,8 @@ import heart from './heart.js'
 import gridPattern from './gridPattern.js'
 import wavePattern from './wavePattern.js'
 import gradientWaveDKV from './gradientWaveDKV.js'
+import denseMandala from './denseMandala.js'
+import stressTestGrid from './stressTestGrid.js'
 
 /**
  * Array of all available project templates
@@ -25,6 +27,9 @@ export const PROJECT_TEMPLATES = [
   gridPattern,
   wavePattern,
   gradientWaveDKV,
+  // ⚠️ Performance benchmark templates (for thesis testing)
+  denseMandala,
+  stressTestGrid,
 ]
 
 /**

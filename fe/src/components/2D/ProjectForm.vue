@@ -445,6 +445,54 @@
           <!-- 3D Preview Tab -->
           <div v-if="activeTab === '3d-preview'" class="space-y-4">
             <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Rendering Mode</h4>
+              <div class="space-y-3">
+                <!-- Use InstancedMesh Toggle -->
+                <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-700 rounded-lg">
+                  <div class="flex-1 mr-3">
+                    <div class="flex items-center gap-2 mb-1">
+                      <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Use InstancedMesh</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Optimizes rendering by using a single draw call for all nails instead of individual meshes. Toggle OFF to compare performance.
+                    </p>
+                  </div>
+                  
+                  <!-- Toggle Switch -->
+                  <button
+                    @click="toggleInstancedMesh"
+                    :class="[
+                      'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
+                      useInstancedMesh ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                    ]"
+                    role="switch"
+                    :aria-checked="useInstancedMesh"
+                  >
+                    <span
+                      :class="[
+                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                        useInstancedMesh ? 'translate-x-5' : 'translate-x-0'
+                      ]"
+                    />
+                  </button>
+                </div>
+                
+                <!-- Info Text -->
+                <div class="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+                  <p class="font-medium text-blue-700 dark:text-blue-300 mb-1">💡 What is InstancedMesh?</p>
+                  <ul class="space-y-1 text-blue-600 dark:text-blue-400">
+                    <li>• <strong>ON:</strong> Single draw call for all nails → Better performance (recommended)</li>
+                    <li>• <strong>OFF:</strong> Individual draw call per nail → Lower FPS with many nails</li>
+                    <li>• Toggle to benchmark and compare FPS in the Performance Monitor below</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
               <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">3D Scene Controls</h4>
               <div class="space-y-3">
                 <!-- Reset Camera Button -->
@@ -472,6 +520,127 @@
                   <span>{{ autoRotate ? 'Stop Auto Rotate' : 'Auto Rotate' }}</span>
                 </button>
               </div>
+            </div>
+
+            <!-- Performance Monitor -->
+            <div class="bg-gray-50 dark:bg-slate-800 p-3 rounded-md">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center justify-between">
+                <span>Performance Monitor</span>
+                <span class="text-xs px-2 py-1 rounded" :class="useInstancedMesh ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'">
+                  {{ useInstancedMesh ? 'Instanced' : 'Regular' }}
+                </span>
+              </h4>
+              <div class="space-y-2">
+                <!-- FPS Display -->
+                <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-700 rounded">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">FPS:</span>
+                  <span class="text-lg font-bold" :class="fpsColor">{{ currentFPS }}</span>
+                </div>
+                
+                <!-- Frame Time Display -->
+                <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-700 rounded">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Frame Time:</span>
+                  <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ currentFrameTime }}ms</span>
+                </div>
+                
+                <!-- Render Time Display -->
+                <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-700 rounded">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Render Time:</span>
+                  <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ renderTime }}ms</span>
+                </div>
+                
+                <!-- Draw Calls Display -->
+                <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-700 rounded">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Draw Calls:</span>
+                  <span class="text-sm font-semibold" :class="drawCalls > 100 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'">
+                    {{ drawCalls }}
+                  </span>
+                </div>
+                
+                <!-- Triangles Display -->
+                <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-700 rounded">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Triangles:</span>
+                  <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ triangles.toLocaleString() }}</span>
+                </div>
+                
+                <!-- Geometries Display -->
+                <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-700 rounded">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Geometries:</span>
+                  <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ geometries }}</span>
+                </div>
+                
+                <!-- Memory Usage (if available) -->
+                <div v-if="memoryUsage" class="flex items-center justify-between p-2 bg-white dark:bg-slate-700 rounded">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Memory:</span>
+                  <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ memoryUsage }}</span>
+                </div>
+              </div>
+              
+              <!-- Benchmark Comparison -->
+              <!-- <div v-if="benchmarkData.instanced && benchmarkData.regular" class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                <h5 class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">📊 Comparison</h5>
+                <div class="space-y-1 text-xs">
+                  <div class="flex justify-between">
+                    <span class="text-blue-600 dark:text-blue-400">FPS Improvement:</span>
+                    <span class="font-semibold" :class="benchmarkData.instanced.fps > benchmarkData.regular.fps ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                      {{ (((benchmarkData.instanced.fps - benchmarkData.regular.fps) / benchmarkData.regular.fps) * 100).toFixed(1) }}%
+                    </span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-blue-600 dark:text-blue-400">Draw Calls Reduced:</span>
+                    <span class="font-semibold text-green-600 dark:text-green-400">
+                      {{ benchmarkData.regular.drawCalls - benchmarkData.instanced.drawCalls }}
+                    </span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-blue-600 dark:text-blue-400">Instanced FPS:</span>
+                    <span class="font-semibold">{{ benchmarkData.instanced.fps }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-blue-600 dark:text-blue-400">Regular FPS:</span>
+                    <span class="font-semibold">{{ benchmarkData.regular.fps }}</span>
+                  </div>
+                </div>
+              </div> -->
+              
+              <!-- Export Buttons -->
+              <!-- <div class="mt-3 flex gap-2">
+                <button
+                  @click="exportBenchmarkCSV"
+                  :disabled="performanceHistory.length === 0"
+                  class="flex-1 text-xs px-2 py-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  title="Export benchmark data as CSV for Excel/analysis"
+                >
+                  📥 CSV
+                </button>
+                <button
+                  @click="exportBenchmarkData"
+                  :disabled="performanceHistory.length === 0"
+                  class="flex-1 text-xs px-2 py-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  title="Export benchmark data as JSON"
+                >
+                  📥 JSON
+                </button>
+                <button
+                  @click="resetBenchmarkData"
+                  :disabled="performanceHistory.length === 0"
+                  class="flex-1 text-xs px-2 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  title="Reset benchmark data"
+                >
+                  🗑️ Reset
+                </button>
+              </div> -->
+              
+              <!-- Hint Text -->
+              <!-- <div class="mt-3 text-xs text-gray-600 dark:text-gray-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+                <p class="font-medium text-yellow-700 dark:text-yellow-300 mb-1">💡 How to benchmark:</p>
+                <ol class="space-y-0.5 text-yellow-600 dark:text-yellow-400 list-decimal list-inside">
+                  <li>Load a complex template (e.g., Stress Test)</li>
+                  <li>Wait 5-10 seconds with <strong>InstancedMesh ON</strong></li>
+                  <li>Toggle to <strong>OFF</strong> and wait 5-10 seconds</li>
+                  <li>Check comparison above and export data</li>
+                </ol>
+              </div> -->
             </div>
 
             <!-- 3D Scene Info -->
@@ -614,7 +783,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['save-project', 'reset-3d-camera', 'toggle-3d-auto-rotate'])
+const emit = defineEmits(['save-project', 'reset-3d-camera', 'toggle-3d-auto-rotate', 'toggle-instanced-mesh'])
 
 // Toast composable
 const { success, error, warning } = useToast()
@@ -935,6 +1104,30 @@ const loadTemplate = (template) => {
 
 // 3D Preview controls
 const autoRotate = ref(false)
+const useInstancedMesh = ref(true)
+
+// Performance monitoring
+const currentFPS = ref(0)
+const currentFrameTime = ref(0)
+const memoryUsage = ref(null)
+const drawCalls = ref(0)
+const triangles = ref(0)
+const geometries = ref(0)
+const renderTime = ref('0.00')
+
+// Performance history for comparison
+const performanceHistory = ref([])
+const benchmarkData = ref({
+  instanced: null,
+  regular: null
+})
+
+// FPS color based on performance
+const fpsColor = computed(() => {
+  if (currentFPS.value >= 55) return 'text-green-600 dark:text-green-400'
+  if (currentFPS.value >= 30) return 'text-yellow-600 dark:text-yellow-400'
+  return 'text-red-600 dark:text-red-400'
+})
 
 // 3D Preview control functions
 const resetCamera = () => {
@@ -946,6 +1139,112 @@ const toggleAutoRotate = () => {
   autoRotate.value = !autoRotate.value
   // Emit event to parent component to handle 3D auto rotate
   emit('toggle-3d-auto-rotate', autoRotate.value)
+}
+
+const toggleInstancedMesh = () => {
+  useInstancedMesh.value = !useInstancedMesh.value
+  // Emit event to parent component to toggle instanced mesh
+  emit('toggle-instanced-mesh', useInstancedMesh.value)
+}
+
+// Update performance metrics (will be called from parent)
+const updatePerformanceMetrics = (fps, frameTime, memory = null, additionalMetrics = {}) => {
+  currentFPS.value = Math.round(fps)
+  currentFrameTime.value = frameTime.toFixed(2)
+  if (memory) {
+    memoryUsage.value = memory
+  }
+  
+  // Update additional metrics
+  if (additionalMetrics.drawCalls !== undefined) drawCalls.value = additionalMetrics.drawCalls
+  if (additionalMetrics.triangles !== undefined) triangles.value = additionalMetrics.triangles
+  if (additionalMetrics.geometries !== undefined) geometries.value = additionalMetrics.geometries
+  if (additionalMetrics.renderTime !== undefined) renderTime.value = additionalMetrics.renderTime
+  
+  // Track performance data for comparison
+  const dataPoint = {
+    timestamp: Date.now(),
+    mode: useInstancedMesh.value ? 'instanced' : 'regular',
+    fps,
+    frameTime,
+    memory,
+    drawCalls: additionalMetrics.drawCalls || 0,
+    triangles: additionalMetrics.triangles || 0,
+    geometries: additionalMetrics.geometries || 0,
+    renderTime: additionalMetrics.renderTime || 0,
+    nailCount: Object.keys(nails.value).length
+  }
+  
+  performanceHistory.value.push(dataPoint)
+  
+  // Keep only last 100 data points
+  if (performanceHistory.value.length > 100) {
+    performanceHistory.value.shift()
+  }
+  
+  // Update benchmark comparison data
+  if (useInstancedMesh.value) {
+    benchmarkData.value.instanced = { ...dataPoint }
+  } else {
+    benchmarkData.value.regular = { ...dataPoint }
+  }
+}
+
+// Export benchmark data
+const exportBenchmarkData = () => {
+  const data = {
+    timestamp: new Date().toISOString(),
+    projectName: projectName.value,
+    nailCount: Object.keys(nails.value).length,
+    gridSize: `${boardSettings.dotsCountHorizontal}×${boardSettings.dotsCountVertical}`,
+    comparison: benchmarkData.value,
+    history: performanceHistory.value
+  }
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `benchmark-${projectName.value || 'project'}-${Date.now()}.json`
+  link.click()
+  URL.revokeObjectURL(url)
+  
+  success('Benchmark data exported successfully!')
+}
+
+// Export to CSV
+const exportBenchmarkCSV = () => {
+  const headers = ['Timestamp', 'Mode', 'FPS', 'Frame Time (ms)', 'Memory (MB)', 'Draw Calls', 'Triangles', 'Geometries', 'Render Time (ms)', 'Nail Count']
+  const rows = performanceHistory.value.map(d => [
+    new Date(d.timestamp).toISOString(),
+    d.mode,
+    d.fps,
+    d.frameTime.toFixed(2),
+    d.memory || 'N/A',
+    d.drawCalls,
+    d.triangles,
+    d.geometries,
+    d.renderTime,
+    d.nailCount
+  ])
+  
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+  const blob = new Blob([csvContent], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `benchmark-${projectName.value || 'project'}-${Date.now()}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+  
+  success('Benchmark CSV exported successfully!')
+}
+
+// Reset benchmark data
+const resetBenchmarkData = () => {
+  performanceHistory.value = []
+  benchmarkData.value = { instanced: null, regular: null }
+  success('Benchmark data reset!')
 }
 
 // Board color selection
@@ -1056,7 +1355,8 @@ defineExpose({
   boardSettings,
   projectName,
   generateGrid,
-  initializeGrid
+  initializeGrid,
+  updatePerformanceMetrics
 })
 </script>
 

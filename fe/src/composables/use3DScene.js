@@ -12,6 +12,13 @@ export function use3DScene(canvasContainer) {
   const fps = ref(0)
   const memoryUsage = ref(0)
   const isSceneReady = ref(false)
+  
+  // Enhanced performance metrics
+  const drawCalls = ref(0)
+  const triangles = ref(0)
+  const geometries = ref(0)
+  const textures = ref(0)
+  const renderTime = ref(0)
 
   // Promise that resolves when scene is initialized
   let sceneReadyResolve
@@ -45,7 +52,8 @@ export function use3DScene(canvasContainer) {
     lightIntensity: 2.0,
     lightContrast: 2.0,
     nailSpacing: 1.0,
-    spacingDistribution: 'uniform'
+    spacingDistribution: 'uniform',
+    useInstancedMesh: true // Toggle for benchmark comparison
   })
 
   // Pattern functions
@@ -146,6 +154,7 @@ export function use3DScene(canvasContainer) {
   let lastTime = 0
   // Use regular variables for Three.js objects that don't need reactivity
   let board, nailInstancedMesh, nailHeadInstancedMesh
+  let regularNailMeshes = [] // Array to hold individual nail meshes for non-instanced mode
   let lights = []
 
   // Methods
@@ -326,7 +335,7 @@ export function use3DScene(canvasContainer) {
   const createNails = () => {
     if (!scene.value) return
 
-    // Remove existing nails
+    // Remove existing instanced meshes
     if (nailInstancedMesh) {
       scene.value.remove(nailInstancedMesh)
       nailInstancedMesh.geometry.dispose()
@@ -339,6 +348,14 @@ export function use3DScene(canvasContainer) {
       nailHeadInstancedMesh.material.dispose()
       nailHeadInstancedMesh = null
     }
+
+    // Remove existing regular meshes
+    regularNailMeshes.forEach(mesh => {
+      scene.value.remove(mesh)
+      mesh.geometry.dispose()
+      mesh.material.dispose()
+    })
+    regularNailMeshes = []
 
     // Check if we have custom nail data and it has nails
     if (settings.value.customNailData &&
@@ -380,6 +397,15 @@ export function use3DScene(canvasContainer) {
     // If no nails, just return without creating any geometry
     if (instanceCount === 0) return
 
+    // Check if we should use InstancedMesh or regular Mesh
+    if (settings.value.useInstancedMesh) {
+      createCustomNailsInstanced(nailPositions, nailsData, gridWidth, gridHeight, marginBetweenNails, instanceCount)
+    } else {
+      createCustomNailsRegular(nailPositions, nailsData, gridWidth, gridHeight, marginBetweenNails)
+    }
+  }
+
+  const createCustomNailsInstanced = (nailPositions, nailsData, gridWidth, gridHeight, marginBetweenNails, instanceCount) => {
     // Create nail geometries - mark as raw to prevent reactivity issues
     const nailGeometry = markRaw(createNailGeometry())
     const nailMaterial = markRaw(new THREE.MeshStandardMaterial({
@@ -448,6 +474,60 @@ export function use3DScene(canvasContainer) {
 
     scene.value.add(nailInstancedMesh)
     scene.value.add(nailHeadInstancedMesh)
+  }
+
+  const createCustomNailsRegular = (nailPositions, nailsData, gridWidth, gridHeight, marginBetweenNails) => {
+    // Create shared geometries (more efficient than creating geometry per nail)
+    const nailGeometry = markRaw(createNailGeometry())
+    const headGeometry = markRaw(createNailHeadGeometry())
+
+    nailPositions.forEach(position => {
+      const [x, y] = position.split(',').map(Number)
+      const nailData = nailsData[position]
+
+      // Calculate actual position on the board
+      const posX = (x - (gridWidth - 1) / 2) * marginBetweenNails
+      const posZ = (y - (gridHeight - 1) / 2) * marginBetweenNails
+
+      // Get nail height (convert mm to cm)
+      const nailHeight = ((nailData.height || 10) / 10) * 1.2
+
+      // Get nail dimensions
+      const bodyWidthMultiplier = (nailData.body_width || 1) * 2.5
+      const headWidthMultiplier = (nailData.head_width || 1) * 2.5
+
+      // Calculate actual dimensions
+      const bodyWidth = settings.value.nailRadius * bodyWidthMultiplier
+      const headWidth = settings.value.nailRadius * settings.value.headSizeRatio * headWidthMultiplier
+
+      // Create individual nail shaft mesh
+      const nailMaterial = markRaw(new THREE.MeshStandardMaterial({
+        color: 0x888888,
+        metalness: settings.value.metalness,
+        roughness: 0.4
+      }))
+      const nailMesh = markRaw(new THREE.Mesh(nailGeometry, nailMaterial))
+      nailMesh.castShadow = true
+      nailMesh.receiveShadow = true
+      nailMesh.scale.set(bodyWidth, nailHeight, bodyWidth)
+      nailMesh.position.set(posX, nailHeight / 2, posZ)
+      scene.value.add(nailMesh)
+      regularNailMeshes.push(nailMesh)
+
+      // Create individual nail head mesh
+      const headMaterial = markRaw(new THREE.MeshStandardMaterial({
+        color: 0x666666,
+        metalness: settings.value.metalness,
+        roughness: 0.3
+      }))
+      const headMesh = markRaw(new THREE.Mesh(headGeometry, headMaterial))
+      headMesh.castShadow = true
+      headMesh.receiveShadow = true
+      headMesh.scale.set(headWidth, 0.2, headWidth)
+      headMesh.position.set(posX, nailHeight, posZ)
+      scene.value.add(headMesh)
+      regularNailMeshes.push(headMesh)
+    })
   }
 
   const createPatternNails = () => {
@@ -542,6 +622,15 @@ export function use3DScene(canvasContainer) {
       if (performance.memory) {
         memoryUsage.value = Math.round(performance.memory.usedJSHeapSize / 1048576)
       }
+      
+      // Update Three.js renderer info
+      if (renderer.value) {
+        const info = renderer.value.info
+        drawCalls.value = info.render.calls
+        triangles.value = info.render.triangles
+        geometries.value = info.memory.geometries
+        textures.value = info.memory.textures
+      }
     }
   }
 
@@ -555,7 +644,9 @@ export function use3DScene(canvasContainer) {
     }
 
     if (renderer.value && scene.value && camera.value) {
+      const renderStart = performance.now()
       renderer.value.render(scene.value, camera.value)
+      renderTime.value = performance.now() - renderStart
     }
   }
 
@@ -625,6 +716,11 @@ export function use3DScene(canvasContainer) {
     settings,
     fps,
     memoryUsage,
+    drawCalls,
+    triangles,
+    geometries,
+    textures,
+    renderTime,
     patterns: Object.keys(patterns),
     sceneReadyPromise,
     initScene,
